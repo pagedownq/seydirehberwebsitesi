@@ -30,13 +30,11 @@ function EsnafApp() {
   const [verifyStatus, setVerifyStatus] = useState<{type: 'success' | 'error', msg: string} | null>(null);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'coupons' | 'support'>('dashboard');
-// const [coupons, setCoupons] = useState<any[]>([]);
   const [stats, setStats] = useState<{
     totalUsed: number,
     dailyTrend: Array<{date: string, count: number}>,
     recentUses: Array<{id: string, code: string, usedAt: Date, couponTitle: string}>
   } | null>(null);
-// const [isStatsLoading, setIsStatsLoading] = useState(false);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -56,7 +54,6 @@ function EsnafApp() {
       };
     } else {
       setStats(null);
-      // setCoupons([]);
       setCompanyName("");
     }
 
@@ -89,13 +86,11 @@ function EsnafApp() {
     if (!fId) return () => {};
     const q = query(collection(db, "coupons"), where("companyId", "==", fId));
     return onSnapshot(q, (_snapshot) => {
-      // setCoupons(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
   };
 
   const fetchStats = (fId: string) => {
     if (!fId) return () => {};
-    // setIsStatsLoading(true);
     const q = query(
       collection(db, "generated_codes"),
       where("companyId", "==", fId),
@@ -133,7 +128,6 @@ function EsnafApp() {
           couponTitle: d.data().couponTitle || "Kupon"
         }))
       });
-      // setIsStatsLoading(false);
     });
   };
 
