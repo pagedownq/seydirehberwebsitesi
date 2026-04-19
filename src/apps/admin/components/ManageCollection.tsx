@@ -12,7 +12,8 @@ import {
   deleteDoc, 
   doc, 
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  writeBatch
 } from 'firebase/firestore';
 import { Plus, Trash2, Edit, X, Loader2, Search, GripVertical } from 'lucide-react';
 import { 
@@ -34,6 +35,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { COLLECTIONS } from '../types';
 import { format } from 'date-fns';
+import { sendFCMNotification } from '../../../lib/fcm';
 
 interface ManageCollectionProps {
   collectionId: string;
@@ -127,7 +129,6 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
 
     // Update orders in Firestore using a batch for performance
     try {
-      const { writeBatch } = await import('firebase/firestore');
       const batch = writeBatch(db);
       for (let i = 0; i < newItems.length; i++) {
         const item = newItems[i];
@@ -801,7 +802,6 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                       
                       // Bildirim gönderme (Eğer durum 'Çözüldü' ise ve token varsa)
                       if (e.target.checked && item.fcm_token) {
-                        const { sendFCMNotification } = await import('../../../lib/fcm');
                         await sendFCMNotification(
                           'Destek Talebiniz Çözüldü ✅',
                           `${item.kategori || 'Destek'} konulu talebiniz başarıyla çözülmüştür.`,
