@@ -16,7 +16,7 @@ const About = () => {
           <ChevronLeft size={20} /> Anasayfaya Dön
         </button>
 
-        <section className="grid lg:grid-cols-2 gap-16 items-center mb-32">
+        <section className="grid lg:grid-cols-2 gap-24 items-center mb-32">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -39,7 +39,7 @@ const About = () => {
             className="relative"
           >
             <div className="absolute inset-0 bg-emerald-200 rounded-full blur-[120px] opacity-30 -z-10" />
-            <img src={heroImg} alt="About SeydiRehber" className="w-full max-w-lg mx-auto drop-shadow-2xl rounded-3xl" />
+            <img src={heroImg} alt="About SeydiRehber" className="w-full max-w-lg lg:ml-auto lg:mr-0 mx-auto drop-shadow-2xl rounded-3xl" />
           </motion.div>
         </section>
 

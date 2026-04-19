@@ -38,7 +38,7 @@ const LandingPage = () => {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
+      <section className="relative pt-40 pb-20 px-6 max-w-7xl mx-auto grid lg:grid-cols-2 gap-20 items-center">
         <div className="absolute top-20 left-10 w-72 h-72 bg-emerald-100 rounded-full blur-3xl opacity-50 -z-10 animate-pulse" />
         
         <motion.div 
@@ -80,7 +80,7 @@ const LandingPage = () => {
           <img 
             src={mockImg} 
             alt="SeydiRehber App Mockup" 
-            className="w-full max-w-2xl mx-auto drop-shadow-[0_45px_45px_rgba(16,185,129,0.15)] rounded-[3rem]"
+            className="w-full max-w-2xl lg:ml-auto lg:mr-0 mx-auto drop-shadow-[0_45px_45px_rgba(16,185,129,0.15)] rounded-[3rem]"
           />
           <div className="absolute -bottom-10 -left-10 bg-white p-8 rounded-3xl shadow-2xl border border-slate-50 hidden xl:block">
             <div className="flex items-center gap-4">
