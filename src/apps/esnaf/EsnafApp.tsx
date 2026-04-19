@@ -13,7 +13,7 @@ import {
   orderBy,
   limit
 } from "firebase/firestore";
-import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, Ticket, CheckCircle2, User, Building2, Phone, MessageCircle } from "lucide-react";
+import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, CheckCircle2, Building2, Phone, MessageCircle } from "lucide-react";
 
 function EsnafApp() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -30,13 +30,13 @@ function EsnafApp() {
   const [verifyStatus, setVerifyStatus] = useState<{type: 'success' | 'error', msg: string} | null>(null);
 
   const [activeTab, setActiveTab] = useState<'dashboard' | 'coupons' | 'support'>('dashboard');
-  const [coupons, setCoupons] = useState<any[]>([]);
+// const [coupons, setCoupons] = useState<any[]>([]);
   const [stats, setStats] = useState<{
     totalUsed: number,
     dailyTrend: Array<{date: string, count: number}>,
     recentUses: Array<{id: string, code: string, usedAt: Date, couponTitle: string}>
   } | null>(null);
-  const [isStatsLoading, setIsStatsLoading] = useState(false);
+// const [isStatsLoading, setIsStatsLoading] = useState(false);
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -56,7 +56,7 @@ function EsnafApp() {
       };
     } else {
       setStats(null);
-      setCoupons([]);
+      // setCoupons([]);
       setCompanyName("");
     }
 
@@ -88,14 +88,14 @@ function EsnafApp() {
   const fetchCoupons = (fId: string) => {
     if (!fId) return () => {};
     const q = query(collection(db, "coupons"), where("companyId", "==", fId));
-    return onSnapshot(q, (snapshot) => {
-      setCoupons(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
+    return onSnapshot(q, (_snapshot) => {
+      // setCoupons(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
     });
   };
 
   const fetchStats = (fId: string) => {
     if (!fId) return () => {};
-    setIsStatsLoading(true);
+    // setIsStatsLoading(true);
     const q = query(
       collection(db, "generated_codes"),
       where("companyId", "==", fId),
@@ -133,7 +133,7 @@ function EsnafApp() {
           couponTitle: d.data().couponTitle || "Kupon"
         }))
       });
-      setIsStatsLoading(false);
+      // setIsStatsLoading(false);
     });
   };
 

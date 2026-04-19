@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { MapPin, Target, Users, Code, ChevronLeft } from 'lucide-react';
+import { Target, Users, Code, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const About = () => {
