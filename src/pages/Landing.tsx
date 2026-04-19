@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Smartphone, ShieldCheck, MapPin, Search, Calendar, Bell, ArrowRight, Download, Code } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import mockImg from '../assets/mock.png';
 
 const LandingPage = () => {
   return (
@@ -77,7 +78,7 @@ const LandingPage = () => {
           className="relative"
         >
           <img 
-            src="/src/assets/mock.png" 
+            src={mockImg} 
             alt="SeydiRehber App Mockup" 
             className="w-full max-w-2xl mx-auto drop-shadow-[0_45px_45px_rgba(16,185,129,0.15)] rounded-[3rem]"
           />

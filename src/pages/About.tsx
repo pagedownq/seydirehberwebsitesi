@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Target, Users, Code, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import heroImg from '../assets/hero.png';
 
 const About = () => {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ const About = () => {
             className="relative"
           >
             <div className="absolute inset-0 bg-emerald-200 rounded-full blur-[120px] opacity-30 -z-10" />
-            <img src="/src/assets/hero.png" alt="About SeydiRehber" className="w-full max-w-lg mx-auto drop-shadow-2xl rounded-3xl" />
+            <img src={heroImg} alt="About SeydiRehber" className="w-full max-w-lg mx-auto drop-shadow-2xl rounded-3xl" />
           </motion.div>
         </section>
 
