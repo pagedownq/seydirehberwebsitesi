@@ -68,6 +68,7 @@ const LandingPage = () => {
           
           <div className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 uppercase tracking-widest">
             <a href="#features" className="hover:text-emerald-600 transition-colors">İçerikler</a>
+            <a href="#faq" className="hover:text-emerald-600 transition-colors">S.S.S.</a>
             <Link to="/about" className="hover:text-emerald-600 transition-colors">Hakkımızda</Link>
           </div>
 
@@ -185,7 +186,7 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-24 bg-white">
+      <section id="faq" className="py-24 bg-white">
         <div className="max-w-3xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-sm font-black uppercase tracking-[0.3em] text-emerald-600 mb-4">Destek Merkezi</h2>
