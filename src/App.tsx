@@ -3,6 +3,7 @@ import LandingPage from './pages/Landing';
 import About from './pages/About';
 import Privacy from './pages/Privacy';
 import KVKK from './pages/KVKK';
+import NotFound from './pages/NotFound';
 import EsnafApp from './apps/esnaf/EsnafApp';
 import AdminApp from './apps/admin/AdminApp';
 
@@ -16,6 +17,7 @@ function App() {
         <Route path="/kvkk" element={<KVKK />} />
         <Route path="/esnaf/*" element={<EsnafApp />} />
         <Route path="/admin/*" element={<AdminApp />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Router>
   );
