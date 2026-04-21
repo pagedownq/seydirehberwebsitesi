@@ -293,8 +293,7 @@ const LandingPage = () => {
             © 2026 seydirehber.com.tr • Tüm Hakları Saklıdır
           </p>
           <div className="flex gap-8 text-sm font-black text-slate-500">
-            <Link to="/privacy" className="hover:text-emerald-600 transition-colors">Gizlilik</Link>
-            <Link to="/kvkk" className="hover:text-emerald-600 transition-colors">KVKK</Link>
+            <Link to="/politikalar" className="hover:text-emerald-600 transition-colors underline decoration-slate-200 underline-offset-4">Yasal Bilgilendirme & Politikalar</Link>
           </div>
         </div>
       </footer>
