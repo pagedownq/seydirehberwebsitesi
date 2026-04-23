@@ -97,8 +97,8 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
         docs.sort((a, b) => {
           const aVal = a[sortField];
           const bVal = b[sortField];
-          if (!aVal) return 1;
-          if (!bVal) return -1;
+          if (!aVal) return -1; // Put new/null items at the top
+          if (!bVal) return 1;
           return bVal - aVal; // Descending
         });
       }
@@ -221,11 +221,11 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
         await updateDoc(doc(db, collectionId, editingItem.id), cleanData);
       } else {
         cleanData.created_at = serverTimestamp();
-        // Set order to last if it's a reorderable collection
+        // Set order to top if it's a reorderable collection
         if (collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') {
             const existingOrders = items.map(i => i.order).filter(o => typeof o === 'number');
-            const maxOrder = existingOrders.length > 0 ? Math.max(...existingOrders) : -1;
-            cleanData.order = maxOrder + 1;
+            const minOrder = existingOrders.length > 0 ? Math.min(...existingOrders) : 0;
+            cleanData.order = minOrder - 1;
         }
 
         if (collectionId === 'admins') {
@@ -359,9 +359,20 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <div className="header" style={{ marginBottom: '1.5rem' }}>
-              <h2>{editingItem ? 'Düzenle' : 'Yeni Ekle'}</h2>
-              <button className="btn btn-outline" style={{ padding: '0.25rem' }} onClick={() => setShowModal(false)}>
+            <div className="modal-header" style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '2rem',
+              paddingBottom: '1rem',
+              borderBottom: '1px solid var(--admin-border)'
+            }}>
+              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>{editingItem ? 'Ögeyi Düzenle' : 'Yeni Öge Ekle'}</h2>
+              <button 
+                className="btn btn-outline" 
+                style={{ padding: '0.5rem', borderRadius: '50%', width: '40px', height: '40px', justifyContent: 'center' }} 
+                onClick={() => setShowModal(false)}
+              >
                 <X size={20} />
               </button>
             </div>
@@ -555,9 +566,21 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                 </div>
               ))}
 
-              <button className="btn btn-primary" style={{ width: '100%' }} disabled={uploading}>
-                {uploading ? <Loader2 className="spin" size={20} /> : (editingItem ? 'Güncelle' : 'Ekle')}
-              </button>
+              <div className="form-actions" style={{ marginTop: '2.5rem' }}>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem' }} disabled={uploading}>
+                  {uploading ? (
+                    <>
+                      <Loader2 className="spin" size={20} />
+                      Yükleniyor...
+                    </>
+                  ) : (
+                    <>
+                      {editingItem ? <Edit size={20} /> : <Plus size={20} />}
+                      {editingItem ? 'Değişiklikleri Kaydet' : 'Sisteme Ekle'}
+                    </>
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>

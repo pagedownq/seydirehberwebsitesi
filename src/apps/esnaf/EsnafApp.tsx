@@ -13,7 +13,7 @@ import {
   orderBy,
   limit
 } from "firebase/firestore";
-import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, CheckCircle2, Building2, Phone, MessageCircle } from "lucide-react";
+import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, CheckCircle2, Building2, Phone, MessageCircle, Tag, MessageSquare, MapPin, Star } from "lucide-react";
 
 function EsnafApp() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -29,12 +29,21 @@ function EsnafApp() {
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifyStatus, setVerifyStatus] = useState<{type: 'success' | 'error', msg: string} | null>(null);
 
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'coupons' | 'support'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'coupons' | 'reviews' | 'support' | 'company'>('dashboard');
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [companyData, setCompanyData] = useState<any>(null);
+  const [lastSync, setLastSync] = useState<Date>(new Date());
+  const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<{
     totalUsed: number,
     dailyTrend: Array<{date: string, count: number}>,
     recentUses: Array<{id: string, code: string, usedAt: Date, couponTitle: string}>
   } | null>(null);
+
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0) / reviews.length).toFixed(1)
+    : '0.0';
 
   useEffect(() => {
     let unsub: (() => void) | undefined;
@@ -47,10 +56,12 @@ function EsnafApp() {
       });
       const unsubStats = fetchStats(companyId);
       const unsubCoupons = fetchCoupons(companyId);
+      const unsubReviews = fetchReviews(companyId);
       unsub = () => {
         unsubCompany();
         unsubStats();
         unsubCoupons();
+        unsubReviews();
       };
     } else {
       setStats(null);
@@ -85,7 +96,25 @@ function EsnafApp() {
   const fetchCoupons = (fId: string) => {
     if (!fId) return () => {};
     const q = query(collection(db, "coupons"), where("companyId", "==", fId));
-    return onSnapshot(q, (_snapshot) => {
+    return onSnapshot(q, (snapshot) => {
+      setCoupons(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLastSync(new Date());
+    }, (err) => {
+      console.error("Coupons fetch error:", err);
+    });
+  };
+
+  const fetchReviews = (fId: string) => {
+    if (!fId) return () => {};
+    const q = query(collection(db, "reviews"), where("targetId", "==", fId), orderBy("createdAt", "desc"));
+    return onSnapshot(q, (snapshot) => {
+      setReviews(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      setLastSync(new Date());
+    }, (err) => {
+      console.error("Reviews fetch error:", err);
+      if (err.code === 'failed-precondition') {
+        setError("Yorumlar için dizin oluşturuluyor, lütfen bekleyin...");
+      }
     });
   };
 
@@ -136,11 +165,18 @@ function EsnafApp() {
     const docRef = doc(db, "firmalar", fId);
     return onSnapshot(docRef, (snapshot) => {
       if (snapshot.exists()) {
-        setCompanyName(snapshot.data().ad || "");
+        const data = snapshot.data();
+        setCompanyName(data.ad || "");
+        setCompanyData({ ...data, id: snapshot.id });
+        setLastSync(new Date());
+        setError(null);
         onUpdate?.(true);
       } else {
         onUpdate?.(false);
       }
+    }, (err) => {
+      console.error("Company fetch error:", err);
+      setError("Firma bilgileri alınamadı.");
     });
   };
 
@@ -301,9 +337,11 @@ function EsnafApp() {
           </div>
         ) : (
           <div className="space-y-8">
-            <nav className="flex items-center gap-2 p-1.5 bg-white/50 backdrop-blur-sm rounded-3xl border border-white max-w-fit mx-auto lg:mx-0">
+            <nav className="flex items-center gap-2 p-1.5 bg-white/50 backdrop-blur-sm rounded-3xl border border-white max-w-fit mx-auto lg:mx-0 overflow-x-auto whitespace-nowrap">
               <button onClick={() => setActiveTab('dashboard')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'dashboard' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Panel</button>
-              <button onClick={() => setActiveTab('coupons')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'coupons' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Kuponlarım</button>
+              <button onClick={() => setActiveTab('coupons')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'coupons' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Kuponlarım ({coupons.length})</button>
+              <button onClick={() => setActiveTab('reviews')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'reviews' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Yorumlar ({reviews.length})</button>
+              <button onClick={() => setActiveTab('company')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'company' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>İşletme Bilgileri</button>
               <button onClick={() => setActiveTab('support')} className={`px-6 py-2.5 rounded-2xl text-xs font-bold transition-all ${activeTab === 'support' ? 'bg-white text-indigo-600 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>Destek</button>
             </nav>
 
@@ -338,10 +376,18 @@ function EsnafApp() {
                        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase tracking-widest rounded-full">CANLI</div>
                     </div>
                     <div className="space-y-10">
-                       <div className="grid grid-cols-2 gap-4">
+                       <div className="grid grid-cols-3 gap-4">
                           <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100/50">
                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Toplam</p>
-                             <p className="text-2xl font-black text-slate-900">{stats?.totalUsed || 0}</p>
+                             <p className="text-xl font-black text-slate-900">{stats?.totalUsed || 0}</p>
+                          </div>
+                          <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100/50">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Aktif</p>
+                             <p className="text-xl font-black text-slate-900">{coupons.filter(c => c.isActive).length}</p>
+                          </div>
+                          <div className="p-5 bg-slate-50/50 rounded-2xl border border-slate-100/50">
+                             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Puan</p>
+                             <p className="text-xl font-black text-amber-500">★ {averageRating}</p>
                           </div>
                        </div>
                        <div className="space-y-4">
@@ -361,7 +407,140 @@ function EsnafApp() {
                 </div>
               </div>
             )}
-            {/* Additional tabs logic for coupons and support here... */}
+            {activeTab === 'coupons' && (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {coupons.length === 0 ? (
+                  <div className="col-span-full py-20 text-center bg-white/50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <Tag className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 font-medium">Henüz oluşturulmuş kuponunuz bulunmuyor.</p>
+                  </div>
+                ) : coupons.map(coupon => (
+                  <div key={coupon.id} className="bg-white/80 backdrop-blur-md p-6 rounded-[2rem] shadow-sm border border-white flex flex-col h-full">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest ${coupon.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                        {coupon.isActive ? 'AKTİF' : 'PASİF'}
+                      </div>
+                      <Tag className="w-5 h-5 text-indigo-400" />
+                    </div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-2">{coupon.title || 'İsimsiz Kupon'}</h3>
+                    <p className="text-sm text-slate-500 mb-6 flex-1">{coupon.description}</p>
+                    <div className="pt-6 border-t border-slate-100 mt-auto">
+                      <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                        <span>KULLANIM</span>
+                        <span>{coupon.used_count || 0} / {coupon.total_limit || '∞'}</span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-indigo-500 transition-all duration-1000" 
+                          style={{ width: `${Math.min(((coupon.used_count || 0) / (coupon.total_limit || 1)) * 100, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="max-w-3xl mx-auto space-y-6">
+                {reviews.length === 0 ? (
+                  <div className="py-20 text-center bg-white/50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
+                    <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 font-medium">Henüz yorum yapılmamış.</p>
+                  </div>
+                ) : reviews.map(review => (
+                  <div key={review.id} className="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-sm border border-white">
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <p className="font-bold text-slate-900">{review.userName || 'Anonim Kullanıcı'}</p>
+                        <p className="text-xs text-slate-400">{review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString('tr-TR') : ''}</p>
+                      </div>
+                      <div className="flex text-amber-400 gap-0.5">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                          <span key={i} className={i < (review.rating || 0) ? 'fill-current' : 'text-slate-200'}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-slate-600 leading-relaxed italic">"{review.comment}"</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'company' && companyData && (
+              <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
+                <div className="bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-sm border border-white space-y-8">
+                   <div>
+                     <h3 className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em] mb-4">İşletme Görseli</h3>
+                     <div className="aspect-video rounded-3xl overflow-hidden border border-slate-100">
+                        <img 
+                          src={companyData.image_url || companyData.gorsel || '/assets/fotoyok.png'} 
+                          alt={companyName}
+                          className="w-full h-full object-cover"
+                        />
+                     </div>
+                   </div>
+                   <div className="grid grid-cols-2 gap-6">
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Kategori</p>
+                        <p className="font-bold text-slate-900">{companyData.kategori || '-'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Puan</p>
+                        <p className="font-bold text-amber-500 text-lg">★ {averageRating}</p>
+                      </div>
+                   </div>
+                </div>
+                <div className="bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-sm border border-white space-y-8">
+                   <div>
+                     <h3 className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em] mb-1">Hakkında</h3>
+                     <p className="text-slate-600 leading-relaxed">{companyData.hakkinda || 'Açıklama belirtilmemiş.'}</p>
+                   </div>
+                   <div className="space-y-4">
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-slate-50 rounded-lg"><Phone className="w-4 h-4 text-slate-400" /></div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">İletişim</p>
+                          <p className="font-bold text-slate-900">{companyData.iletisim || '-'}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-4">
+                        <div className="p-2 bg-slate-50 rounded-lg"><MapPin className="w-4 h-4 text-slate-400" /></div>
+                        <div>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Adres</p>
+                          <p className="font-bold text-slate-900">{companyData.adres || '-'}</p>
+                        </div>
+                      </div>
+                   </div>
+                   <div className="pt-6 border-t border-slate-100">
+                     <p className="text-[10px] text-slate-400 font-medium">Bu bilgilerde hata varsa lütfen yönetici ile iletişime geçin.</p>
+                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'support' && (
+              <div className="max-w-2xl mx-auto bg-white/80 backdrop-blur-md p-10 rounded-[3rem] shadow-xl border border-white text-center">
+                 <div className="w-20 h-20 bg-indigo-50 text-indigo-600 rounded-[2rem] flex items-center justify-center mx-auto mb-8">
+                   <MessageCircle className="w-10 h-10" />
+                 </div>
+                 <h2 className="text-3xl font-black text-slate-900 mb-4">Destek Merkezi</h2>
+                 <p className="text-slate-500 font-medium mb-10">Sorunlarınız, talepleriniz veya bilgilerinizdeki güncellemeler için bize her zaman ulaşabilirsiniz.</p>
+                 
+                 <div className="grid sm:grid-cols-2 gap-6">
+                    <a href="https://wa.me/905456962060" target="_blank" className="p-8 bg-emerald-50 rounded-[2rem] border border-emerald-100 hover:scale-105 transition-transform group">
+                       <MessageCircle className="w-10 h-10 text-emerald-600 mx-auto mb-4 group-hover:animate-bounce" />
+                       <p className="text-xs font-black text-emerald-700 uppercase tracking-widest">WhatsApp</p>
+                       <p className="font-bold text-emerald-900 mt-1">Hızlı Destek</p>
+                    </a>
+                    <a href="tel:+905456962060" className="p-8 bg-indigo-50 rounded-[2rem] border border-indigo-100 hover:scale-105 transition-transform group">
+                       <Phone className="w-10 h-10 text-indigo-600 mx-auto mb-4 group-hover:animate-bounce" />
+                       <p className="text-xs font-black text-indigo-700 uppercase tracking-widest">Telefon</p>
+                       <p className="font-bold text-indigo-900 mt-1">Müşteri Hizmetleri</p>
+                    </a>
+                 </div>
+              </div>
+            )}
           </div>
         )}
       </main>

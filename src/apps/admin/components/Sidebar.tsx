@@ -31,7 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, permissions 
   return (
     <aside className="sidebar">
       <div className="logo">Seydi Rehber Admin</div>
-      <nav>
+      <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '0.5rem' }} className="sidebar-nav">
         {filteredItems.map((item) => {
           const Icon = item.icon;
           return (
