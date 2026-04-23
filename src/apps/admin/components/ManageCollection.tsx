@@ -885,6 +885,23 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                 />
                 <span className="slider"></span>
               </label>
+              <button 
+                className="btn btn-danger" 
+                style={{ 
+                  padding: '0.4rem', 
+                  borderRadius: '8px', 
+                  fontSize: '0.7rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                  marginTop: '4px'
+                }} 
+                onClick={() => handleDelete(item.id)}
+              >
+                <Trash2 size={14} />
+                Sil
+              </button>
             </div>
           </td>
         )}

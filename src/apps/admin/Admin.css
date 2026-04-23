@@ -129,6 +129,16 @@
   background: var(--admin-glass-bg);
 }
 
+.btn-danger {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
+
 .form-group {
   margin-bottom: 1.25rem;
 }
