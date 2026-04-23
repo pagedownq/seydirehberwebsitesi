@@ -402,7 +402,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                 </div>
               )}
 
-              {config.fields.map(field => (
+              {config.fields.filter(f => !f.key.startsWith('canManage')).map(field => (
                 <div className="form-group" key={field.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                     <label className="label" style={{ marginBottom: 0 }}>{field.label}</label>
@@ -565,6 +565,50 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                   )}
                 </div>
               ))}
+
+              {/* Special Handling for Permissions in Admin Management */}
+              {collectionId === 'admins' && config.fields.some(f => f.key.startsWith('canManage')) && (
+                <div style={{ 
+                  marginTop: '2rem', 
+                  padding: '1.5rem', 
+                  background: 'rgba(255, 255, 255, 0.03)', 
+                  borderRadius: '1.25rem',
+                  border: '1px solid var(--admin-border)'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--admin-text)' }}>Yönetici Yetkileri</h3>
+                    <button 
+                      type="button" 
+                      className="btn btn-outline" 
+                      style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', height: 'auto' }}
+                      onClick={() => {
+                        const permissions = config.fields.filter(f => f.key.startsWith('canManage'));
+                        const allOn = permissions.every(p => formData[p.key]);
+                        const updates: any = {};
+                        permissions.forEach(p => updates[p.key] = !allOn);
+                        setFormData({ ...formData, ...updates });
+                      }}
+                    >
+                      {config.fields.filter(f => f.key.startsWith('canManage')).every(p => formData[p.key]) ? 'Tümünü Kaldır' : 'Tümünü Seç'}
+                    </button>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+                    {config.fields.filter(f => f.key.startsWith('canManage')).map(field => (
+                      <div key={field.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--admin-border)' }}>
+                        <label className="switch" style={{ transform: 'scale(0.8)' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={formData[field.key] || false}
+                            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.checked })}
+                          />
+                          <span className="slider"></span>
+                        </label>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--admin-text)', fontWeight: 500 }}>{field.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="form-actions" style={{ marginTop: '2.5rem' }}>
                 <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem' }} disabled={uploading}>
