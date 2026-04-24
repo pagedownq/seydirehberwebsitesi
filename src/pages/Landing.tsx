@@ -3,7 +3,7 @@ import {
   Smartphone, ShieldCheck, MapPin, Search, Calendar, Bell, 
   ArrowRight, Code, CloudSun, Ticket, Scale, 
   ShoppingBag, Bus, Newspaper, Map, Camera, Building2, Briefcase,
-  ChevronDown, ExternalLink, Users, Star, ArrowUpRight
+  ChevronDown, ExternalLink, Users, Star, ArrowUpRight, Menu, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import mockImg from '../assets/mock.png';
@@ -11,6 +11,7 @@ import { useState, useRef } from 'react';
 
 const LandingPage = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const containerRef = useRef(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -64,7 +65,10 @@ const LandingPage = () => {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 cursor-pointer group" 
-            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              setIsMenuOpen(false);
+            }}
           >
             <div className="relative">
               <div className="absolute inset-0 bg-emerald-500 blur-lg opacity-20 group-hover:opacity-40 transition-opacity" />
@@ -78,6 +82,7 @@ const LandingPage = () => {
             </div>
           </motion.div>
           
+          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-10 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">
             <a href="#features" className="hover:text-emerald-600 transition-colors relative group">
               İçerikler
@@ -93,25 +98,78 @@ const LandingPage = () => {
             </Link>
           </div>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex items-center gap-4"
-          >
+          <div className="flex items-center gap-4">
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-4"
+            >
+              <a 
+                href="https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
+              >
+                Hemen İndir
+              </a>
+            </motion.div>
+
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="md:hidden p-2 text-slate-600 hover:bg-slate-50 rounded-xl transition-colors"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu Overlay */}
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ 
+            opacity: isMenuOpen ? 1 : 0, 
+            height: isMenuOpen ? 'auto' : 0,
+            display: isMenuOpen ? 'block' : 'none'
+          }}
+          className="md:hidden bg-white border-b border-slate-100 overflow-hidden"
+        >
+          <div className="flex flex-col p-6 gap-6 text-sm font-black text-slate-400 uppercase tracking-[0.2em]">
+            <a 
+              href="#features" 
+              onClick={() => setIsMenuOpen(false)}
+              className="hover:text-emerald-600 transition-colors"
+            >
+              İçerikler
+            </a>
+            <a 
+              href="#faq" 
+              onClick={() => setIsMenuOpen(false)}
+              className="hover:text-emerald-600 transition-colors"
+            >
+              S.S.S.
+            </a>
+            <Link 
+              to="/about" 
+              onClick={() => setIsMenuOpen(false)}
+              className="hover:text-emerald-600 transition-colors"
+            >
+              Hakkımızda
+            </Link>
             <a 
               href="https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
+              className="flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-4 rounded-2xl font-bold text-xs"
             >
               Hemen İndir
             </a>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-40 pb-20 px-6 max-w-7xl mx-auto">
+      <section className="relative pt-32 lg:pt-40 pb-20 px-6 max-w-7xl mx-auto">
         {/* Background Decorative Elements */}
         <div className="absolute top-40 -left-20 w-[500px] h-[500px] bg-emerald-100 rounded-full blur-[120px] opacity-30 -z-10 animate-pulse" />
         <div className="absolute top-20 -right-20 w-[400px] h-[400px] bg-blue-100 rounded-full blur-[100px] opacity-20 -z-10" />
@@ -123,12 +181,12 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
             className="z-10"
           >
-            <h1 className="text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] mb-8">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] mb-8">
               Şehri <br />
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600">Parmaklarının</span> <br />
               Ucunda Hisset.
             </h1>
-            <p className="text-lg lg:text-xl text-slate-500 font-medium leading-relaxed max-w-lg mb-10">
+            <p className="text-base lg:text-lg xl:text-xl text-slate-500 font-medium leading-relaxed max-w-lg mb-10">
               Nöbetçi eczanelerden güncel haberlere, otobüs saatlerinden size özel indirimlere kadar Seydişehir'e dair her şey tek bir akıllı platformda.
             </p>
             
@@ -224,7 +282,7 @@ const LandingPage = () => {
       {/* Stats Section */}
       <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-50" />
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-20 text-center relative z-10">
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 text-center relative z-10">
           <div>
              <p className="text-6xl font-black text-blue-400 mb-2">12+</p>
              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Akıllı Servis</p>
@@ -241,7 +299,7 @@ const LandingPage = () => {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 mb-4 text-center">Bilgi Bankası</h2>
-            <p className="text-5xl font-black tracking-tighter text-slate-900 text-center">Merak Edilenler</p>
+            <p className="text-3xl sm:text-5xl font-black tracking-tighter text-slate-900 text-center">Merak Edilenler</p>
           </div>
 
           <div className="space-y-6">
