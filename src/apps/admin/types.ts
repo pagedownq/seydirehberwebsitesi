@@ -20,10 +20,11 @@ export interface FieldConfig {
   isBoolean?: boolean;
 }
 
-export const COLLECTIONS: Record<string, { title: string; bucket: string | null; fields: FieldConfig[] }> = {
+export const COLLECTIONS: Record<string, { title: string; bucket: string | null; fields: FieldConfig[]; reorderable?: boolean }> = {
   banners: {
     title: 'Banner Yönetimi',
     bucket: 'banner',
+    reorderable: true,
     fields: [
       { key: 'ad', label: 'Banner Adı', required: true },
       { key: 'url', label: 'Banner Linki (Opsiyonel)' },
@@ -69,15 +70,21 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
   otobus_saatleri: {
     title: 'Otobüs Saatleri Yönetimi',
     bucket: null,
+    reorderable: true,
     fields: [
       { key: 'guzergah', label: 'Güzergah', required: true },
-      { key: 'saatler', label: 'Sefer Saatleri (Saat Ekle Butonu)', isTimeList: true, required: true },
+      { key: 'saatler_hergun', label: 'Her Gün Sefer Saatleri (Tüm Günler)', isTimeList: true },
+      { key: 'saatler_haftaici', label: 'Hafta İçi Sefer Saatleri', isTimeList: true },
+      { key: 'saatler_cumartesi', label: 'Cumartesi Sefer Saatleri', isTimeList: true },
+      { key: 'saatler_pazar', label: 'Pazar Sefer Saatleri', isTimeList: true },
       { key: 'duraklar', label: 'Duraklar (Opsiyonel)', multiline: true },
+      { key: 'order', label: 'Sıra', isNumber: true },
     ],
   },
   gezilecek_yerler: {
     title: 'Gezilecek Yerler',
     bucket: 'gezilcek_yerler',
+    reorderable: true,
     fields: [
       { key: 'ad', label: 'Yer Adı', required: true },
       { key: 'hakkinda', label: 'Hakkında', multiline: true },
@@ -90,6 +97,7 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
   firmalar: {
     title: 'Firma Yönetimi',
     bucket: 'firmalar',
+    reorderable: true,
     fields: [
       { key: 'ad', label: 'Firma Adı', required: true },
       { key: 'kategori', label: 'Kategori (Örn: Restoran, Kafe, Market)' },

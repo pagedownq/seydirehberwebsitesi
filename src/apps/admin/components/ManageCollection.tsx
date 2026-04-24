@@ -82,13 +82,15 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
       let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
       
       // Perform manual sorting for specific collections
-      if (collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') {
+      if (config.reorderable) {
         docs.sort((a, b) => {
           const aOrder = a.order ?? 999999;
           const bOrder = b.order ?? 999999;
           if (aOrder !== bOrder) return aOrder - bOrder;
-          // Use 'ad' (name) as secondary sort for deterministic order
-          return (a.ad || '').toLowerCase().localeCompare((b.ad || '').toLowerCase(), undefined, { sensitivity: 'base' });
+          // Use name/title as secondary sort for deterministic order
+          const nameA = a.ad || a.title || a.baslik || a.guzergah || '';
+          const nameB = b.ad || b.title || b.baslik || b.guzergah || '';
+          return nameA.toLowerCase().localeCompare(nameB.toLowerCase(), undefined, { sensitivity: 'base' });
         });
       } else {
         // Fallback sorts for other collections
@@ -222,7 +224,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
       } else {
         cleanData.created_at = serverTimestamp();
         // Set order to top if it's a reorderable collection
-        if (collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') {
+        if (config.reorderable) {
             const existingOrders = items.map(i => i.order).filter(o => typeof o === 'number');
             const minOrder = existingOrders.length > 0 ? Math.min(...existingOrders) : 0;
             cleanData.order = minOrder - 1;
@@ -320,7 +322,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
           <table className="table">
             <thead>
               <tr>
-                {(collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') && <th style={{ width: '40px' }}></th>}
+                {config.reorderable && <th style={{ width: '40px' }}></th>}
                 {config.bucket && <th>Görsel</th>}
                 <th>Bilgi / İçerik</th>
                 {collectionId === 'yardim_destek' && <th>Durum</th>}
@@ -330,7 +332,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
             <SortableContext 
               items={filteredItems.map(i => i.id)} 
               strategy={verticalListSortingStrategy}
-              disabled={collectionId !== 'firmalar' && collectionId !== 'banners' && collectionId !== 'gezilecek_yerler'}
+              disabled={!config.reorderable}
             >
               <tbody>
                 {filteredItems.map((item) => (
@@ -339,7 +341,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                         item={item} 
                         collectionId={collectionId} 
                         config={config} 
-                        isDraggable={(collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') && searchTerm === ''} // Disable drag if searching
+                        isDraggable={config.reorderable && searchTerm === ''} // Disable drag if searching
                         handleOpenModal={handleOpenModal}
                         handleDelete={handleDelete}
                     />
@@ -432,9 +434,17 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                           className="input" 
                           id={`time-input-${field.key}`}
                           style={{ width: 'auto' }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              const btn = document.getElementById(`time-add-btn-${field.key}`);
+                              btn?.click();
+                            }
+                          }}
                         />
                         <button 
                           type="button"
+                          id={`time-add-btn-${field.key}`}
                           className="btn btn-primary"
                           style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
                           onClick={() => {
@@ -449,12 +459,37 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                                 const newTimes = [...currentTimes, input.value].sort();
                                 setFormData({ ...formData, [field.key]: newTimes.join(',') });
                               }
+                              
                               input.value = '';
+                              setTimeout(() => {
+                                input.focus();
+                              }, 10);
                             }
                           }}
                         >
                           Saat Ekle
                         </button>
+
+                        {field.key === 'saatler_hergun' && (
+                          <button 
+                            type="button"
+                            className="btn btn-outline"
+                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                            onClick={() => {
+                              const currentTimes = formData['saatler_hergun'] || '';
+                              if (currentTimes) {
+                                setFormData({
+                                  ...formData,
+                                  saatler_haftaici: currentTimes,
+                                  saatler_cumartesi: currentTimes,
+                                  saatler_pazar: currentTimes
+                                });
+                              }
+                            }}
+                          >
+                            Tüm Günlere Kopyala
+                          </button>
+                        )}
                       </div>
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                         {(formData[field.key] as string || '')
@@ -655,7 +690,7 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
 
   return (
     <tr ref={setNodeRef} style={style}>
-      {(collectionId === 'firmalar' || collectionId === 'banners' || collectionId === 'gezilecek_yerler') && (
+      {config.reorderable && (
         <td style={{ padding: '1rem', cursor: isDraggable ? 'grab' : 'default' }} {...attributes} {...listeners}>
           <GripVertical size={20} style={{ color: 'var(--text-muted)' }} />
         </td>
@@ -783,10 +818,59 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                 </div>
               </>
             )}
+            {collectionId === 'otobus_saatleri' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {item.saatler_hergun && (
+                  <div>
+                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Her Gün (Tüm Haftalık):</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {item.saatler_hergun.split(',').map((t: string) => (
+                        <span key={t} style={{ background: 'rgba(59, 130, 246, 0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>{t.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {item.saatler_haftaici && (
+                  <div>
+                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Hafta İçi:</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {item.saatler_haftaici.split(',').map((t: string) => (
+                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {item.saatler_cumartesi && (
+                  <div>
+                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Cumartesi:</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {item.saatler_cumartesi.split(',').map((t: string) => (
+                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {item.saatler_pazar && (
+                  <div>
+                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Pazar:</strong>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                      {item.saatler_pazar.split(',').map((t: string) => (
+                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {item.duraklar && (
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                    <strong>Duraklar:</strong> {item.duraklar}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 
-        {!(collectionId === 'yardim_destek' || collectionId === 'reviews' || collectionId === 'coupons' || collectionId === 'sikayetler') && (
+        {!(collectionId === 'yardim_destek' || collectionId === 'reviews' || collectionId === 'coupons' || collectionId === 'sikayetler' || collectionId === 'otobus_saatleri') && (
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
             {(item.hakkinda || item.konum || '')?.substring(0, 100)}...
           </div>
