@@ -162,21 +162,7 @@ const LandingPage = () => {
               </div>
             </div>
 
-            <div className="mt-12 flex items-center gap-6">
-              <div className="flex -space-x-3">
-                {[1,2,3,4].map(i => (
-                  <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 overflow-hidden">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${i+10}`} alt="User" />
-                  </div>
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1 text-amber-500 mb-0.5">
-                  {[1,2,3,4,5].map(i => <Star key={i} className="w-3 h-3 fill-current" />)}
-                </div>
-                <p className="text-xs font-bold text-slate-500"><span className="text-slate-900">5.000+</span> Seydişehirli kullanıyor</p>
-              </div>
-            </div>
+
           </motion.div>
 
           <motion.div 
@@ -238,11 +224,7 @@ const LandingPage = () => {
       {/* Stats Section */}
       <section className="py-32 bg-slate-900 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent opacity-50" />
-        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-3 gap-20 text-center relative z-10">
-          <div>
-             <p className="text-6xl font-black text-emerald-400 mb-2">5.000+</p>
-             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Aktif Kullanıcı</p>
-          </div>
+        <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-2 gap-20 text-center relative z-10">
           <div>
              <p className="text-6xl font-black text-blue-400 mb-2">12+</p>
              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Akıllı Servis</p>
