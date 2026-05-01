@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://seydirehber.com.tr/sitemap.xml

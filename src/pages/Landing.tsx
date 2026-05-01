@@ -6,6 +6,7 @@ import {
   ChevronDown, ExternalLink, Users, Star, ArrowUpRight, Menu, X
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import mockImg from '../assets/mock.png';
 import { useState, useRef } from 'react';
 
@@ -58,6 +59,52 @@ const LandingPage = () => {
 
   return (
     <div ref={containerRef} className="min-h-screen bg-[#fafafa] text-slate-900 overflow-x-hidden selection:bg-emerald-100 font-sans">
+      <Helmet>
+        <html lang="tr" />
+        <title>Seydişehir Rehberi - Nöbetçi Eczaneler, Otobüs Saatleri ve Firmalar</title>
+        <meta name="description" content="Seydişehir'in en kapsamlı dijital şehir rehberi SeydiRehber! Seydişehir nöbetçi eczaneler, otobüs saatleri, firma rehberi, haberler ve hava durumu tek uygulamada." />
+        <meta name="keywords" content="Seydişehir, Seydişehir nöbetçi eczane, Seydişehir otobüs saatleri, Seydişehir haberleri, Seydişehir firmaları, Seydişehir rehberi, Seydişehir hava durumu" />
+        
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://seydirehber.com.tr/" />
+        <meta property="og:title" content="Seydişehir Rehberi - Nöbetçi Eczaneler ve Şehir Rehberi" />
+        <meta property="og:description" content="Seydişehir'in en kapsamlı dijital şehir rehberi! Nöbetçi eczaneler, otobüs saatleri, firma rehberi ve daha fazlası SeydiRehber'de." />
+        
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://seydirehber.com.tr/" />
+        <meta property="twitter:title" content="Seydişehir Rehberi - Nöbetçi Eczaneler ve Şehir Rehberi" />
+        <meta property="twitter:description" content="Seydişehir'in en kapsamlı dijital şehir rehberi! Nöbetçi eczaneler, otobüs saatleri, firma rehberi ve daha fazlası." />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "SeydiRehber",
+            "operatingSystem": "ANDROID, IOS",
+            "applicationCategory": "UtilitiesApplication",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "TRY"
+            },
+            "description": "Seydişehir nöbetçi eczaneler, otobüs saatleri, firma rehberi ve şehir rehberini sunan mobil uygulama."
+          })}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
+          })}
+        </script>
+      </Helmet>
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-2xl border-b border-slate-100/50">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
@@ -105,9 +152,11 @@ const LandingPage = () => {
               className="flex items-center gap-4"
             >
               <a 
-                href="https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim"
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#download"
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
+                }}
                 className="hidden sm:flex items-center gap-2 bg-slate-900 text-white px-5 py-2.5 rounded-xl font-bold text-xs hover:bg-emerald-600 transition-all active:scale-95 shadow-lg shadow-slate-900/10"
               >
                 Hemen İndir
@@ -157,9 +206,12 @@ const LandingPage = () => {
               Hakkımızda
             </Link>
             <a 
-              href="https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="#download"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsMenuOpen(false);
+                document.getElementById('download')?.scrollIntoView({ behavior: 'smooth' });
+              }}
               className="flex items-center justify-center gap-2 bg-slate-900 text-white px-5 py-4 rounded-2xl font-bold text-xs"
             >
               Hemen İndir
@@ -182,10 +234,11 @@ const LandingPage = () => {
             className="z-10"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-black tracking-tighter text-slate-900 leading-[0.95] mb-8">
-              Şehri <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600">Parmaklarının</span> <br />
-              Ucunda Hisset.
+              Seydişehir'i <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 via-emerald-500 to-blue-600">Dijitalde</span> <br />
+              Keşfedin.
             </h1>
+            <p className="sr-only">Seydişehir nöbetçi eczaneler, otobüs saatleri, hava durumu, haberler ve Seydişehir firma rehberi.</p>
             <p className="text-base lg:text-lg xl:text-xl text-slate-500 font-medium leading-relaxed max-w-lg mb-10">
               Nöbetçi eczanelerden güncel haberlere, otobüs saatlerinden size özel indirimlere kadar Seydişehir'e dair her şey tek bir akıllı platformda.
             </p>
@@ -209,15 +262,23 @@ const LandingPage = () => {
                 <ArrowRight className="w-5 h-5 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-emerald-400" />
               </a>
 
-              <div className="flex items-center gap-4 bg-white border border-slate-100 text-slate-300 px-8 py-5 rounded-[2rem] font-bold opacity-60 grayscale">
-                <div className="p-2 bg-slate-100 rounded-xl">
-                  <Smartphone className="w-6 h-6" />
+              <a 
+                href="https://apps.apple.com/tr/app/seydi-rehber/id6762803524" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="group relative flex items-center gap-4 bg-white border border-slate-100 text-slate-900 px-8 py-5 rounded-[2rem] font-bold shadow-xl hover:border-emerald-200 transition-all active:scale-95"
+              >
+                <div className="p-2 bg-slate-100 rounded-xl group-hover:bg-emerald-50 transition-colors">
+                  <svg viewBox="0 0 384 512" className="w-6 h-6 fill-current">
+                     <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+                  </svg>
                 </div>
                 <div>
-                  <p className="text-[10px] uppercase font-black tracking-widest opacity-60 leading-none mb-1 text-slate-400">iOS Yakında</p>
+                  <p className="text-[10px] uppercase font-black tracking-widest opacity-40 leading-none mb-1">iOS İçin</p>
                   <p className="text-xl leading-none">App Store</p>
                 </div>
-              </div>
+                <ArrowRight className="w-5 h-5 opacity-0 -translate-x-4 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-emerald-500" />
+              </a>
             </div>
 
 
@@ -232,7 +293,7 @@ const LandingPage = () => {
             <div className="relative z-10 w-full max-w-[280px] lg:max-w-[320px]">
               <img 
                 src={mockImg} 
-                alt="App Interface" 
+                alt="SeydiRehber Mobil Uygulaması - Seydişehir Nöbetçi Eczane ve Şehir Rehberi Arayüzü" 
                 className="w-full h-auto drop-shadow-[0_20px_50px_rgba(0,0,0,0.1)]"
               />
             </div>
@@ -243,9 +304,9 @@ const LandingPage = () => {
       {/* Feature Section Header */}
       <section id="features" className="pt-20 pb-10 px-6">
          <div className="max-w-7xl mx-auto text-center">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 mb-4">Uygulama Ekosistemi</h2>
-            <h3 className="text-4xl lg:text-6xl font-black tracking-tighter text-slate-900 mb-6">İhtiyacın Olan Her Şey, <br /> Tek Bir Dokunuşla.</h3>
-            <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Modern tasarımı ve hızıyla Seydişehir'in dijital dünyasını yeniden şekillendiriyoruz.</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 mb-4">Uygulama Ekosistemi</p>
+            <h2 className="text-4xl lg:text-6xl font-black tracking-tighter text-slate-900 mb-6">İhtiyacın Olan Her Şey, <br /> Tek Bir Dokunuşla.</h2>
+            <p className="text-lg text-slate-500 font-medium max-w-2xl mx-auto">Modern tasarımı ve hızıyla Seydişehir'in dijital dünyasını yeniden şekillendiriyoruz. Seydişehir nöbetçi eczanelerden haberlere kadar her şey elinizin altında.</p>
          </div>
       </section>
 
@@ -269,7 +330,7 @@ const LandingPage = () => {
                    <span className="absolute -top-3 -right-3 bg-slate-900 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest">{f.badge}</span>
                 )}
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-emerald-700 transition-colors">{f.title}</h4>
+              <h3 className="text-xl font-bold text-slate-900 mb-3 group-hover:text-emerald-700 transition-colors">{f.title}</h3>
               <p className="text-slate-500 font-medium leading-relaxed text-sm mb-6">{f.desc}</p>
               <div className="flex items-center text-xs font-bold text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity">
                 Detaylı İncele <ArrowRight size={14} className="ml-1" />
@@ -298,8 +359,8 @@ const LandingPage = () => {
       <section id="faq" className="py-40 bg-white">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 mb-4 text-center">Bilgi Bankası</h2>
-            <p className="text-3xl sm:text-5xl font-black tracking-tighter text-slate-900 text-center">Merak Edilenler</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-emerald-600 mb-4 text-center">Bilgi Bankası</p>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tighter text-slate-900 text-center">Seydişehir Rehberi - Sıkça Sorulan Sorular</h2>
           </div>
 
           <div className="space-y-6">
@@ -313,7 +374,7 @@ const LandingPage = () => {
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full px-10 py-8 flex justify-between items-center text-left"
                 >
-                  <span className="text-xl font-bold text-slate-800">{faq.question}</span>
+                  <h3 className="text-xl font-bold text-slate-800">{faq.question}</h3>
                   <div className={`p-2 rounded-full transition-all duration-500 ${openFaq === i ? 'bg-emerald-500 text-white rotate-180' : 'bg-slate-50 text-slate-400'}`}>
                     <ChevronDown size={24} />
                   </div>
@@ -334,7 +395,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section - Ultra Premium */}
-      <section className="py-40 px-6 relative overflow-hidden bg-slate-50">
+      <section id="download" className="py-40 px-6 relative overflow-hidden bg-slate-50">
         <div className="max-w-7xl mx-auto">
           <div className="relative bg-slate-900 rounded-[4rem] p-12 lg:p-24 overflow-hidden">
             <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-emerald-600 rounded-full blur-[180px] opacity-20 -mr-96 -mt-96" />
@@ -358,6 +419,7 @@ const LandingPage = () => {
                     <a 
                       href="https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim"
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="group bg-white text-slate-900 px-10 py-6 rounded-[2.5rem] font-black text-xl shadow-2xl hover:scale-105 transition-all flex items-center gap-4"
                     >
                        <svg viewBox="0 0 512 512" className="w-8 h-8 fill-emerald-600">
@@ -365,6 +427,19 @@ const LandingPage = () => {
                        </svg>
                        Google Play
                        <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </a>
+                    
+                    <a 
+                      href="https://apps.apple.com/tr/app/seydi-rehber/id6762803524"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group bg-slate-900 border border-slate-800 text-white px-10 py-6 rounded-[2.5rem] font-black text-xl shadow-2xl hover:border-emerald-500/50 hover:scale-105 transition-all flex items-center gap-4"
+                    >
+                       <svg viewBox="0 0 384 512" className="w-8 h-8 fill-white">
+                          <path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/>
+                       </svg>
+                       App Store
+                       <ArrowUpRight className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform text-emerald-400" />
                     </a>
                  </div>
                </motion.div>
