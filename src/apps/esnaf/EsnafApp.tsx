@@ -388,32 +388,34 @@ function EsnafApp() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0a0c10] p-4 relative overflow-hidden font-sans">
         {/* Animated Background Orbs */}
-        <motion.div 
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, 90, 0],
-            x: [0, 50, 0]
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-          className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[120px]" 
-        />
-        <motion.div 
-          animate={{ 
-            scale: [1.2, 1, 1.2],
-            rotate: [0, -90, 0],
-            x: [0, -50, 0]
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-emerald-600/20 rounded-full blur-[120px]" 
-        />
+        <div className="fixed inset-0 pointer-events-none z-0">
+          <motion.div 
+            animate={{ 
+              scale: [1, 1.2, 1],
+              rotate: [0, 90, 0],
+              x: [0, 50, 0]
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute top-[-10%] left-[-5%] w-[50%] h-[50%] bg-indigo-600/20 rounded-full blur-[120px]" 
+          />
+          <motion.div 
+            animate={{ 
+              scale: [1.2, 1, 1.2],
+              rotate: [0, -90, 0],
+              x: [0, -50, 0]
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-[-10%] right-[-5%] w-[50%] h-[50%] bg-emerald-600/20 rounded-full blur-[120px]" 
+          />
+        </div>
         
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-md w-full relative z-10"
+          className="max-w-md w-full relative z-50"
         >
           <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl p-10 overflow-hidden relative group">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
             <div className="text-center mb-10">
               <motion.div 
@@ -435,7 +437,7 @@ function EsnafApp() {
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
                   placeholder="isletme_adi" 
-                  className="block w-full bg-white/[0.05] rounded-2xl border border-white/10 text-white px-6 py-4 focus:bg-white/[0.08] focus:border-indigo-500/50 transition-all outline-none placeholder:text-slate-600" 
+                  className="block w-full bg-white/[0.08] rounded-2xl border border-white/10 text-white px-6 py-4 focus:bg-white/[0.12] focus:border-indigo-500/50 transition-all outline-none placeholder:text-slate-600 relative z-30" 
                   required 
                 />
               </div>
@@ -446,7 +448,7 @@ function EsnafApp() {
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
                   placeholder="••••••••" 
-                  className="block w-full bg-white/[0.05] rounded-2xl border border-white/10 text-white px-6 py-4 focus:bg-white/[0.08] focus:border-indigo-500/50 transition-all outline-none placeholder:text-slate-600" 
+                  className="block w-full bg-white/[0.08] rounded-2xl border border-white/10 text-white px-6 py-4 focus:bg-white/[0.12] focus:border-indigo-500/50 transition-all outline-none placeholder:text-slate-600 relative z-30" 
                   required 
                 />
               </div>
@@ -470,7 +472,7 @@ function EsnafApp() {
                 whileTap={{ scale: 0.98 }}
                 type="submit" 
                 disabled={isLoggingIn} 
-                className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3"
+                className="w-full bg-gradient-to-r from-indigo-500 to-violet-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 cursor-pointer relative z-30"
               >
                 {isLoggingIn ? (
                   <RefreshCw className="h-6 w-6 animate-spin" />
@@ -482,19 +484,19 @@ function EsnafApp() {
 
             <div className="mt-10 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
               <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Destek Hattı</p>
-              <div className="flex gap-4 w-full">
+              <div className="flex gap-4 w-full relative z-30">
                 <motion.a 
                   whileHover={{ scale: 1.05, y: -2 }}
                   href="https://wa.me/905456962060" 
                   target="_blank" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 p-4 rounded-2xl border border-emerald-500/20 font-black text-[10px] uppercase tracking-wider"
+                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 p-4 rounded-2xl border border-emerald-500/20 font-black text-[10px] uppercase tracking-wider cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" /> WhatsApp
                 </motion.a>
                 <motion.a 
                   whileHover={{ scale: 1.05, y: -2 }}
                   href="tel:+905456962060" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 text-slate-300 p-4 rounded-2xl border border-white/10 font-black text-[10px] uppercase tracking-wider"
+                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 text-slate-300 p-4 rounded-2xl border border-white/10 font-black text-[10px] uppercase tracking-wider cursor-pointer"
                 >
                   <Phone className="h-4 w-4" /> Telefon
                 </motion.a>
