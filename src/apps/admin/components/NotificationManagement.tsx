@@ -9,9 +9,12 @@ import {
   deleteDoc, 
   doc, 
   serverTimestamp,
-  limit 
+  limit,
+  writeBatch,
+  getDocs,
+  where
 } from 'firebase/firestore';
-import { Send, Bell, Trash2, Loader2, Calendar, MessageSquare } from 'lucide-react';
+import { Send, Bell, Trash2, Loader2, Calendar, MessageSquare, Trash } from 'lucide-react';
 import { sendFCMNotification } from '../../../lib/fcm';
 import { format } from 'date-fns';
 
@@ -19,6 +22,7 @@ const NotificationManagement: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [clearing, setClearing] = useState(false);
   const [title, setTitle] = useState('');
   const [body, setBody] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -27,7 +31,7 @@ const NotificationManagement: React.FC = () => {
     const q = query(
       collection(db, 'duyurular'), 
       orderBy('tarih', 'desc'),
-      limit(20)
+      limit(50)
     );
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -75,6 +79,29 @@ const NotificationManagement: React.FC = () => {
       await deleteDoc(doc(db, 'duyurular', id));
     } catch (err) {
       console.error('Delete error:', err);
+    }
+  };
+
+  const handleClearEsnafHistory = async () => {
+    if (!window.confirm('Tüm esnaf bildirim geçmişini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
+    
+    setClearing(true);
+    try {
+      const q = query(collection(db, 'duyurular'), where('type', '==', 'review_reply'));
+      const snapshot = await getDocs(q);
+      
+      const batch = writeBatch(db);
+      snapshot.docs.forEach((d) => {
+        batch.delete(d.ref);
+      });
+      
+      await batch.commit();
+      alert('Esnaf bildirim geçmişi başarıyla temizlendi.');
+    } catch (err) {
+      console.error('Clear error:', err);
+      alert('Temizleme sırasında bir hata oluştu.');
+    } finally {
+      setClearing(false);
     }
   };
 
@@ -156,7 +183,7 @@ const NotificationManagement: React.FC = () => {
              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
                 <Bell size={20} color="#f59e0b" />
              </div>
-             <h3 style={{ margin: 0 }}>Genel Bildirim Geçmişi (Son 20)</h3>
+             <h3 style={{ margin: 0 }}>Genel Bildirim Geçmişi</h3>
           </div>
 
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
@@ -186,8 +213,8 @@ const NotificationManagement: React.FC = () => {
                       </td>
                       <td style={{ padding: '1rem', fontSize: '0.75rem', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <Calendar size={12} />
-                          {notif.tarih?.toDate ? format(notif.tarih.toDate(), 'dd.MM.yyyy HH:mm') : '...'}
+                           <Calendar size={12} />
+                           {notif.tarih?.toDate ? format(notif.tarih.toDate(), 'dd.MM.yyyy HH:mm') : '...'}
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
@@ -209,11 +236,23 @@ const NotificationManagement: React.FC = () => {
 
         {/* Esnaf Notification History */}
         <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '2rem', gridColumn: 'span 2' }}>
-          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-             <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
-                <MessageSquare size={20} color="#10b981" />
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
+                    <MessageSquare size={20} color="#10b981" />
+                </div>
+                <h3 style={{ margin: 0 }}>Esnaf Bildirim Geçmişi (Yorum Yanıtları)</h3>
              </div>
-             <h3 style={{ margin: 0 }}>Esnaf Bildirim Geçmişi (Yorum Yanıtları)</h3>
+             
+             <button 
+               className="btn btn-outline" 
+               style={{ color: '#ef4444', borderColor: '#fee2e2', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}
+               onClick={handleClearEsnafHistory}
+               disabled={clearing || notifications.filter(n => n.type === 'review_reply').length === 0}
+             >
+               {clearing ? <Loader2 className="spin" size={14} /> : <Trash size={14} />}
+               Tümünü Temizle
+             </button>
           </div>
 
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
