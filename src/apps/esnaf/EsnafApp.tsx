@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../../lib/firebase";
+import { sendFCMNotification } from "../../lib/fcm";
 import { 
   getDocs, 
   collection, 
@@ -8,12 +9,14 @@ import {
   Timestamp, 
   runTransaction, 
   doc, 
+  updateDoc,
+  addDoc,
   increment, 
   onSnapshot,
   orderBy,
   limit
 } from "firebase/firestore";
-import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, CheckCircle2, Building2, Phone, MessageCircle, Tag, MessageSquare, MapPin, Star } from "lucide-react";
+import { KeyRound, LogOut, AlertCircle, BarChart3, RefreshCw, CheckCircle2, Building2, Phone, MessageCircle, Tag, MessageSquare, MapPin, Star, ChevronLeft, ChevronRight, X, Maximize2 } from "lucide-react";
 
 function EsnafApp() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -35,11 +38,27 @@ function EsnafApp() {
   const [companyData, setCompanyData] = useState<any>(null);
   const [lastSync, setLastSync] = useState<Date>(new Date());
   const [error, setError] = useState<string | null>(null);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
   const [stats, setStats] = useState<{
     totalUsed: number,
     dailyTrend: Array<{date: string, count: number}>,
     recentUses: Array<{id: string, code: string, usedAt: Date, couponTitle: string}>
   } | null>(null);
+
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const galleryRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollGallery = (direction: 'left' | 'right') => {
+    if (galleryRef.current) {
+      const scrollAmount = 400;
+      galleryRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   const averageRating = reviews.length > 0 
     ? (reviews.reduce((acc, curr) => acc + (Number(curr.rating) || 0), 0) / reviews.length).toFixed(1)
@@ -85,6 +104,24 @@ function EsnafApp() {
   }, [userId]);
 
   useEffect(() => {
+    // 1. Check URL params for auto-login from Admin
+    const params = new URLSearchParams(window.location.search);
+    const autoUser = params.get("auto_user");
+    const autoCompany = params.get("auto_company");
+
+    if (autoUser && autoCompany) {
+      setUserId(autoUser);
+      setCompanyId(autoCompany);
+      localStorage.setItem("esnaf_user_id", autoUser);
+      localStorage.setItem("esnaf_firma_id", autoCompany);
+      
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+      return;
+    }
+
+    // 2. Check LocalStorage
     const storedUser = localStorage.getItem("esnaf_user_id");
     const storedFirma = localStorage.getItem("esnaf_firma_id");
     if (storedUser && storedFirma) {
@@ -251,6 +288,74 @@ function EsnafApp() {
       setVerifyStatus({type: 'error', msg: err.message || "Hata oluştu."});
     } finally {
       setIsVerifying(false);
+    }
+  };
+
+  const handleReply = async (reviewId: string, reviewerId: string) => {
+    if (!replyText.trim()) return;
+    setIsSubmittingReply(true);
+    try {
+      const reviewRef = doc(db, "reviews", reviewId);
+      await updateDoc(reviewRef, {
+        reply: {
+          text: replyText.trim(),
+          createdAt: Timestamp.now()
+        }
+      });
+
+      // ADD NOTIFICATION RECORD (FOR HISTORY)
+      await addDoc(collection(db, "duyurular"), {
+        baslik: "İşletme Yanıtı 💬",
+        icerik: `${companyName} yorumunuza yanıt verdi: "${replyText.trim().substring(0, 50)}${replyText.length > 50 ? '...' : ''}"`,
+        tarih: Timestamp.now(),
+        targetUserId: reviewerId,
+        type: "review_reply"
+      });
+
+      // SEND PUSH NOTIFICATION (FCM)
+      try {
+        const tokensQ = query(
+          collection(db, "user_tokens"), 
+          where("userId", "==", reviewerId),
+          where("isEnabled", "==", true)
+        );
+        const tokensSnapshot = await getDocs(tokensQ);
+        
+        const pushPromises = tokensSnapshot.docs.map(tokenDoc => {
+          const token = tokenDoc.data().token;
+          return sendFCMNotification(
+            "İşletme Yanıtı 💬",
+            `${companyName} yorumunuza yanıt verdi.`,
+            '/notifications', // Redirect to notifications screen on mobile
+            token
+          );
+        });
+
+        await Promise.all(pushPromises);
+      } catch (fcmErr) {
+        console.error("FCM Send error:", fcmErr);
+        // Don't block the UI if push fails
+      }
+
+      setReplyingTo(null);
+      setReplyText("");
+    } catch (err) {
+      console.error("Reply error:", err);
+      alert("Yanıt gönderilemedi.");
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
+  const deleteReply = async (reviewId: string) => {
+    if (!window.confirm("Yanıtınızı silmek istediğinize emin misiniz?")) return;
+    try {
+      const reviewRef = doc(db, "reviews", reviewId);
+      await updateDoc(reviewRef, {
+        reply: null
+      });
+    } catch (err) {
+      console.error("Delete reply error:", err);
     }
   };
 
@@ -449,8 +554,8 @@ function EsnafApp() {
                     <p className="text-slate-500 font-medium">Henüz yorum yapılmamış.</p>
                   </div>
                 ) : reviews.map(review => (
-                  <div key={review.id} className="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-sm border border-white">
-                    <div className="flex justify-between items-start mb-4">
+                  <div key={review.id} className="bg-white/80 backdrop-blur-md p-8 rounded-[2rem] shadow-sm border border-white space-y-6">
+                    <div className="flex justify-between items-start">
                       <div>
                         <p className="font-bold text-slate-900">{review.userName || 'Anonim Kullanıcı'}</p>
                         <p className="text-xs text-slate-400">{review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString('tr-TR') : ''}</p>
@@ -462,60 +567,215 @@ function EsnafApp() {
                       </div>
                     </div>
                     <p className="text-slate-600 leading-relaxed italic">"{review.comment}"</p>
+
+                    {/* EXISTING REPLY */}
+                    {review.reply && (
+                      <div className="ml-8 p-6 bg-indigo-50/50 rounded-[1.5rem] border border-indigo-100/50 relative">
+                        <div className="flex items-center gap-3 mb-3">
+                          <img 
+                            src={companyData?.image_url || companyData?.gorsel || '/assets/fotoyok.png'} 
+                            alt={companyName}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white shadow-sm"
+                          />
+                          <div>
+                            <p className="text-xs font-black text-indigo-700 uppercase tracking-wider">{companyName} <span className="text-[10px] font-bold text-indigo-400 ml-2">İşletme Yanıtı</span></p>
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-700 leading-relaxed">{review.reply.text}</p>
+                        <div className="mt-4 flex gap-4">
+                           <button 
+                            onClick={() => {
+                              setReplyingTo(review.id);
+                              setReplyText(review.reply.text);
+                            }}
+                            className="text-[10px] font-black text-indigo-500 uppercase tracking-widest hover:text-indigo-700"
+                          >
+                            Düzenle
+                          </button>
+                          <button 
+                            onClick={() => deleteReply(review.id)}
+                            className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:text-rose-700"
+                          >
+                            Sil
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* REPLY INPUT */}
+                    {replyingTo === review.id ? (
+                      <div className="ml-8 space-y-4">
+                        <textarea 
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          placeholder="Müşterinize bir yanıt yazın..."
+                          className="w-full p-4 rounded-2xl bg-white border border-slate-200 text-sm focus:border-indigo-500 outline-none transition-all h-24"
+                        />
+                        <div className="flex gap-3">
+                          <button 
+                            onClick={() => handleReply(review.id, review.userId)}
+                            disabled={isSubmittingReply || !replyText.trim()}
+                            className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-xs hover:bg-indigo-700 transition-all flex items-center justify-center gap-2"
+                          >
+                            {isSubmittingReply ? <RefreshCw className="w-4 h-4 animate-spin" /> : 'Yanıtı Kaydet'}
+                          </button>
+                          <button 
+                            onClick={() => {
+                              setReplyingTo(null);
+                              setReplyText("");
+                            }}
+                            className="px-6 bg-slate-100 text-slate-600 py-3 rounded-xl font-bold text-xs hover:bg-slate-200 transition-all"
+                          >
+                            İptal
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      !review.reply && (
+                        <button 
+                          onClick={() => setReplyingTo(review.id)}
+                          className="flex items-center gap-2 text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                          <MessageSquare className="w-4 h-4" /> Bu yorumu yanıtla
+                        </button>
+                      )
+                    )}
                   </div>
                 ))}
               </div>
             )}
 
             {activeTab === 'company' && companyData && (
-              <div className="max-w-4xl mx-auto grid md:grid-cols-2 gap-8">
-                <div className="bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-sm border border-white space-y-8">
-                   <div>
-                     <h3 className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em] mb-4">İşletme Görseli</h3>
-                     <div className="aspect-video rounded-3xl overflow-hidden border border-slate-100">
-                        <img 
-                          src={companyData.image_url || companyData.gorsel || '/assets/fotoyok.png'} 
-                          alt={companyName}
-                          className="w-full h-full object-cover"
-                        />
-                     </div>
-                   </div>
-                   <div className="grid grid-cols-2 gap-6">
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Kategori</p>
-                        <p className="font-bold text-slate-900">{companyData.kategori || '-'}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Puan</p>
-                        <p className="font-bold text-amber-500 text-lg">★ {averageRating}</p>
-                      </div>
-                   </div>
-                </div>
-                <div className="bg-white/80 backdrop-blur-md p-10 rounded-[2.5rem] shadow-sm border border-white space-y-8">
-                   <div>
-                     <h3 className="text-xs font-black text-indigo-500 uppercase tracking-[0.2em] mb-1">Hakkında</h3>
-                     <p className="text-slate-600 leading-relaxed">{companyData.hakkinda || 'Açıklama belirtilmemiş.'}</p>
-                   </div>
-                   <div className="space-y-4">
-                      <div className="flex items-start gap-4">
-                        <div className="p-2 bg-slate-50 rounded-lg"><Phone className="w-4 h-4 text-slate-400" /></div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">İletişim</p>
-                          <p className="font-bold text-slate-900">{companyData.iletisim || '-'}</p>
+              <div className="max-w-6xl mx-auto space-y-10 animate-in fade-in zoom-in-95 duration-700 pb-20">
+                {/* HEADER SECTION */}
+                <div className="relative h-64 rounded-[3rem] overflow-hidden shadow-2xl">
+                  <img 
+                    src={companyData.images?.[0] || companyData.image_url || companyData.gorsel || '/assets/fotoyok.png'} 
+                    className="w-full h-full object-cover"
+                    alt="Kapak"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/20 to-transparent flex items-end p-10">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="bg-indigo-500 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
+                          {companyData.kategori || 'İşletme'}
+                        </span>
+                        <div className="flex items-center gap-1 text-amber-400 font-bold">
+                          <Star className="w-4 h-4 fill-current" />
+                          <span>{averageRating}</span>
                         </div>
                       </div>
-                      <div className="flex items-start gap-4">
-                        <div className="p-2 bg-slate-50 rounded-lg"><MapPin className="w-4 h-4 text-slate-400" /></div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Adres</p>
-                          <p className="font-bold text-slate-900">{companyData.adres || '-'}</p>
+                      <h1 className="text-4xl font-black text-white">{companyName}</h1>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid lg:grid-cols-3 gap-10">
+                  {/* LEFT: DETAILS & CONTACT */}
+                  <div className="lg:col-span-1 space-y-6">
+                    <div className="bg-white/80 backdrop-blur-md p-8 rounded-[2.5rem] shadow-sm border border-white space-y-6">
+                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-4">İletişim Bilgileri</h3>
+                      
+                      <div className="space-y-6">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-indigo-50 rounded-2xl"><Phone className="w-5 h-5 text-indigo-600" /></div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase mb-0.5">Telefon</p>
+                            <p className="font-bold text-slate-900">{companyData.iletisim || '-'}</p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-indigo-50 rounded-2xl"><MapPin className="w-5 h-5 text-indigo-600" /></div>
+                          <div>
+                            <p className="text-[10px] font-black text-slate-400 uppercase mb-0.5">Adres</p>
+                            <p className="font-bold text-slate-900 text-sm leading-relaxed">{companyData.adres || '-'}</p>
+                          </div>
                         </div>
                       </div>
-                   </div>
-                   <div className="pt-6 border-t border-slate-100">
-                     <p className="text-[10px] text-slate-400 font-medium">Bu bilgilerde hata varsa lütfen yönetici ile iletişime geçin.</p>
-                   </div>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 rounded-[2.5rem] text-white shadow-xl shadow-indigo-200">
+                      <h3 className="font-black text-xl mb-4">Değişiklik Mi Lazım?</h3>
+                      <p className="text-indigo-100 text-sm mb-6 leading-relaxed">Bilgilerinizde veya fotoğraflarınızda bir güncelleme yapmak için hemen yöneticiye ulaşın.</p>
+                      <button 
+                        onClick={() => {
+                          const adminPhone = "905456962060";
+                          const message = encodeURIComponent(`${companyName} (${companyId}) firmasına ait işletme bilgilerinde düzenleme / değişiklik yapmak istiyorum.`);
+                          window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
+                        }}
+                        className="w-full bg-white text-indigo-600 py-4 rounded-2xl font-black text-sm hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        WhatsApp ile Talep Et
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: ABOUT & ALL IMAGES */}
+                  <div className="lg:col-span-2 space-y-10">
+                    <div className="bg-white/80 backdrop-blur-md p-10 rounded-[3rem] shadow-sm border border-white">
+                      <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-100 pb-4">İşletme Hakkında</h3>
+                      <p className="text-slate-600 leading-relaxed text-lg italic">
+                        "{companyData.hakkinda || 'İşletme açıklaması henüz eklenmemiş.'}"
+                      </p>
+                    </div>
+
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest">Görsel Galerisi ({companyData.images?.length || 0})</h3>
+                        <div className="flex gap-2">
+                           <button onClick={() => scrollGallery('left')} className="p-2 bg-white rounded-full shadow-md hover:bg-indigo-50 transition-colors border border-slate-100">
+                             <ChevronLeft className="w-4 h-4 text-indigo-600" />
+                           </button>
+                           <button onClick={() => scrollGallery('right')} className="p-2 bg-white rounded-full shadow-md hover:bg-indigo-50 transition-colors border border-slate-100">
+                             <ChevronRight className="w-4 h-4 text-indigo-600" />
+                           </button>
+                        </div>
+                      </div>
+                      
+                      <div 
+                        ref={galleryRef}
+                        className="flex gap-6 overflow-x-auto pb-6 snap-x no-scrollbar scroll-smooth" 
+                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                      >
+                        {companyData.images?.map((url: string, index: number) => (
+                          <div 
+                            key={index} 
+                            onClick={() => setSelectedImage(url)}
+                            className="flex-none w-[320px] aspect-video rounded-[2.5rem] overflow-hidden border-4 border-white shadow-xl hover:scale-[1.03] transition-all duration-500 cursor-zoom-in group relative snap-start"
+                          >
+                            <img src={url} className="w-full h-full object-cover" alt={`Görsel ${index + 1}`} />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                               <Maximize2 className="text-white w-8 h-8" />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
+                
+                {/* LIGHTBOX MODAL */}
+                {selectedImage && (
+                  <div 
+                    className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
+                    onClick={() => setSelectedImage(null)}
+                  >
+                    <button 
+                      className="absolute top-10 right-10 text-white/50 hover:text-white transition-colors"
+                      onClick={() => setSelectedImage(null)}
+                    >
+                      <X className="w-10 h-10" />
+                    </button>
+                    <img 
+                      src={selectedImage} 
+                      className="max-w-full max-h-full rounded-3xl shadow-2xl object-contain animate-in zoom-in-95 duration-500"
+                      alt="Tam Boyut"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                )}
               </div>
             )}
 

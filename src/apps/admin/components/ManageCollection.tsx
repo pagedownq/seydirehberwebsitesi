@@ -4,6 +4,8 @@ import { supabase } from '../../../lib/supabase';
 import { 
   collection, 
   query, 
+  where,
+  getDocs,
   orderBy, 
   onSnapshot, 
   addDoc, 
@@ -39,9 +41,11 @@ import { sendFCMNotification } from '../../../lib/fcm';
 
 interface ManageCollectionProps {
   collectionId: string;
+  initialFilterId?: string | null;
+  onTabChange?: (tab: string, filterId: string | null) => void;
 }
 
-const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => {
+const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initialFilterId, onTabChange }) => {
   const config = COLLECTIONS[collectionId];
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,11 +53,13 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
   const [showModal, setShowModal] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [formData, setFormData] = useState<any>({});
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<string[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [companies, setCompanies] = useState<any[]>([]);
   const [companySearch, setCompanySearch] = useState('');
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(initialFilterId || '');
 
   useEffect(() => {
     // We always want to fetch companies for filtering and picking
@@ -148,30 +154,42 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
     if (item) {
       setEditingItem(item);
       setFormData(item);
+      // Initialize existing images from 'images' array or fallback to 'image_url'/'gorsel'
+      const imgs = item.images || (item.image_url ? [item.image_url] : (item.gorsel ? [item.gorsel] : []));
+      setExistingImages(imgs);
     } else {
       setEditingItem(null);
-      // Set defaults for new items
+      // Pre-fill companyId if filtering is active
       const defaults: any = {};
-      if (collectionId === 'coupons') {
-        defaults.isActive = true;
+      if (selectedCompanyId) {
+        defaults.companyId = selectedCompanyId;
+        const company = companies.find(c => c.id === selectedCompanyId);
+        if (company) {
+          defaults.companyName = company.ad;
+          defaults.companyCategory = company.kategori;
+        }
       }
       setFormData(defaults);
+      setExistingImages([]);
     }
-    setSelectedFile(null);
+    setSelectedFiles([]);
+    setImagesToDelete([]);
     setShowModal(true);
   };
 
-  const handleUploadImage = async (file: File) => {
+  const handleUploadImage = async (file: File): Promise<string> => {
     if (!config.bucket) return '';
-    setUploading(true);
-    const fileName = `${Date.now()}_${file.name}`;
+    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name.replace(/\s+/g, '_')}`;
+    
     const { error } = await supabase.storage
       .from(config.bucket)
-      .upload(fileName, file);
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
 
     if (error) {
       console.error('Upload error:', error);
-      setUploading(false);
       return '';
     }
 
@@ -179,7 +197,6 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
       .from(config.bucket)
       .getPublicUrl(fileName);
 
-    setUploading(false);
     return publicUrl;
   };
 
@@ -188,42 +205,56 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
     setUploading(true);
 
     try {
-      let imageUrl = formData.image_url || formData.gorsel || '';
+      // 1. Upload new files in parallel
+      const newImageUrls = await Promise.all(
+        selectedFiles.map(file => handleUploadImage(file))
+      );
       
-      if (selectedFile) {
-        imageUrl = await handleUploadImage(selectedFile);
+      const validNewUrls = newImageUrls.filter(url => url !== '');
+      const finalImages = [...existingImages, ...validNewUrls];
+
+      // 2. Delete removed images from Storage
+      if (config.bucket && imagesToDelete.length > 0) {
+        const fileNames = imagesToDelete.map(url => {
+          try {
+            return new URL(url).pathname.split('/').pop() || '';
+          } catch {
+            return url.split('/').pop() || '';
+          }
+        }).filter(name => name !== '');
+        
+        if (fileNames.length > 0) {
+          await supabase.storage.from(config.bucket).remove(fileNames);
+        }
       }
 
       const cleanData = { ...formData };
       delete cleanData.id;
       
+      // Update image arrays
+      cleanData.images = finalImages;
+      cleanData.image_url = finalImages.length > 0 ? finalImages[0] : null;
+      if (config.bucket === 'firmalar') cleanData.gorsel = cleanData.image_url;
+      
       // Handle specialized fields
       config.fields.forEach(f => {
         if (f.isNumber) {
-          cleanData[f.key] = Number(cleanData[f.key]) || 0;
+          const val = cleanData[f.key];
+          cleanData[f.key] = (val === '' || val === null || val === undefined) ? (f.required ? 0 : null) : Number(val);
         }
         if (f.isDate && cleanData[f.key] && typeof cleanData[f.key] === 'string') {
-          // Convert HTML date string (YYYY-MM-DD) to Firestore Timestamp
           cleanData[f.key] = Timestamp.fromDate(new Date(cleanData[f.key]));
         }
-        if (f.isBoolean) {
-          cleanData[f.key] = !!cleanData[f.key];
-        }
-        // Ensure optional fields can be cleared
+        if (f.isBoolean) cleanData[f.key] = !!cleanData[f.key];
         if (!f.required && (cleanData[f.key] === '' || cleanData[f.key] === undefined)) {
           cleanData[f.key] = null;
         }
       });
 
-      if (imageUrl) {
-        cleanData.image_url = imageUrl;
-      }
-
       if (editingItem) {
         await updateDoc(doc(db, collectionId, editingItem.id), cleanData);
       } else {
         cleanData.created_at = serverTimestamp();
-        // Set order to top if it's a reorderable collection
         if (config.reorderable) {
             const existingOrders = items.map(i => i.order).filter(o => typeof o === 'number');
             const minOrder = existingOrders.length > 0 ? Math.min(...existingOrders) : 0;
@@ -231,10 +262,8 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
         }
 
         if (collectionId === 'admins') {
-          // Use email as document ID for admins to match security rules
           const email = cleanData.email?.toLowerCase().trim();
           if (!email) throw new Error('Email gereklidir');
-          
           await setDoc(doc(db, 'admins', email), cleanData);
         } else {
           await addDoc(collection(db, collectionId), cleanData);
@@ -250,15 +279,23 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
     }
   };
 
-  const handleDelete = async (id: string, imageUrl?: string) => {
+  const handleDelete = async (id: string, itemData: any) => {
     if (!window.confirm('Bu ögeyi silmek istediğinize emin misiniz?')) return;
     
     try {
-      if (imageUrl && config.bucket) {
-        const urlObj = new URL(imageUrl);
-        const fileName = urlObj.pathname.split('/').pop();
-        if (fileName) {
-          await supabase.storage.from(config.bucket).remove([fileName]);
+      const images = itemData.images || (itemData.image_url ? [itemData.image_url] : (itemData.gorsel ? [itemData.gorsel] : []));
+      
+      if (images.length > 0 && config.bucket) {
+        const fileNames = images.map((url: string) => {
+          try {
+            return new URL(url).pathname.split('/').pop() || '';
+          } catch {
+            return url.split('/').pop() || '';
+          }
+        }).filter((name: string) => name !== '');
+
+        if (fileNames.length > 0) {
+          await supabase.storage.from(config.bucket).remove(fileNames);
         }
       }
       await deleteDoc(doc(db, collectionId, id));
@@ -343,7 +380,8 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
                         config={config} 
                         isDraggable={config.reorderable && searchTerm === ''} // Disable drag if searching
                         handleOpenModal={handleOpenModal}
-                        handleDelete={handleDelete}
+                        handleDelete={() => handleDelete(item.id, item)}
+                        onTabChange={onTabChange}
                     />
                 ))}
               </tbody>
@@ -381,25 +419,64 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
             <form onSubmit={handleSubmit}>
               {config.bucket && (
                 <div className="form-group">
-                  <label className="label">Görsel</label>
-                  <div className="img-preview" onClick={() => document.getElementById('fileInput')?.click()}>
-                    {selectedFile ? (
-                      <img src={URL.createObjectURL(selectedFile)} alt="Preview" />
-                    ) : formData.image_url ? (
-                      <img src={formData.image_url} alt="Current" />
-                    ) : (
-                      <div style={{ textAlign: 'center' }}>
-                         <img src="/assets/fotoyok.png" alt="No image" style={{ width: '48px', height: '48px', marginBottom: '0.5rem', opacity: 0.5 }} />
-                        <div>Resim Seç</div>
+                  <label className="label">Fotoğraflar</label>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                    {/* ADD BUTTON */}
+                    <div 
+                      className="img-preview" 
+                      onClick={() => document.getElementById('fileInput')?.click()}
+                    >
+                      <Plus size={24} />
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>Ekle</div>
+                    </div>
+
+                    {/* EXISTING IMAGES */}
+                    {existingImages.map((url, idx) => (
+                      <div key={`existing-${idx}`} className="image-gallery-item">
+                        <img src={url} alt="Existing" />
+                        <button 
+                          type="button"
+                          className="remove-img-btn"
+                          onClick={() => {
+                            setExistingImages(existingImages.filter(u => u !== url));
+                            setImagesToDelete([...imagesToDelete, url]);
+                          }}
+                        >
+                          <X size={14} />
+                        </button>
                       </div>
-                    )}
+                    ))}
+
+                    {/* NEWLY SELECTED IMAGES */}
+                    {selectedFiles.map((file, idx) => (
+                      <div key={`new-${idx}`} className="image-gallery-item">
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt="New" 
+                          style={{ border: '2px solid var(--admin-primary)' }} 
+                        />
+                        <button 
+                          type="button"
+                          className="remove-img-btn"
+                          style={{ background: '#000' }}
+                          onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
                   </div>
+                  
                   <input 
                     type="file" 
                     id="fileInput" 
                     style={{ display: 'none' }} 
                     accept="image/*"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                    multiple
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files || []);
+                      setSelectedFiles([...selectedFiles, ...files]);
+                    }}
                   />
                 </div>
               )}
@@ -668,7 +745,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId }) => 
   );
 };
 
-const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal, handleDelete }: any) => {
+const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal, handleDelete, onTabChange }: any) => {
   const {
     attributes,
     listeners,
@@ -686,6 +763,32 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
     zIndex: isDragging ? 2 : 1,
     position: 'relative' as any,
     borderBottom: '1px solid var(--border)'
+  };
+
+  const handleEsnafAccess = async (e: React.MouseEvent, companyId: string) => {
+    e.stopPropagation();
+    try {
+      const q = query(collection(db, "esnaf_users"), where("companyId", "==", companyId));
+      const snapshot = await getDocs(q);
+      
+      if (!snapshot.empty) {
+        // Account exists, set credentials and redirect
+        const esnafUserId = snapshot.docs[0].id;
+        localStorage.setItem("esnaf_user_id", esnafUserId);
+        localStorage.setItem("esnaf_firma_id", companyId);
+        
+        // Redirect reliably in same tab to avoid popup blockers
+        window.location.href = `/esnaf?auto_user=${esnafUserId}&auto_company=${companyId}`;
+      } else {
+        alert("Bu firmaya ait bir esnaf hesabı bulunamadı. Esnaf Yönetimi sayfasına yönlendiriliyorsunuz.");
+        if (onTabChange) {
+          onTabChange('esnaf_users', companyId);
+        }
+      }
+    } catch (err) {
+      console.error("Esnaf access error:", err);
+      alert("Yönlendirme sırasında bir hata oluştu.");
+    }
   };
 
   return (
@@ -711,13 +814,40 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
           {item.order !== undefined && <span style={{ color: 'var(--text-muted)', marginLeft: '0.75rem', fontSize: '0.8rem', fontWeight: 400 }}>(Sıra: {item.order})</span>}
         </div>
         
-        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
           {item.kategori && <span style={{ background: 'var(--glass-bg)', padding: '2px 8px', borderRadius: '4px' }}>{item.kategori}</span>}
           {item.tarih?.toDate && (
             <span><i className="bi bi-clock me-1"></i> {format(item.tarih.toDate(), 'dd.MM.yyyy HH:mm')}</span>
           )}
           {item.createdAt?.toDate && (
             <span><i className="bi bi-calendar3 me-1"></i> {format(item.createdAt.toDate(), 'dd.MM.yyyy HH:mm')}</span>
+          )}
+          
+          {/* QUICK LINKS FOR FIRMALAR */}
+          {collectionId === 'firmalar' && onTabChange && (
+            <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '0.5rem' }}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onTabChange('coupons', item.id); }}
+                className="btn btn-outline" 
+                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#fbbf24', color: '#fbbf24' }}
+              >
+                Kuponlar
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); onTabChange('reviews', item.id); }}
+                className="btn btn-outline" 
+                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#6366f1', color: '#6366f1' }}
+              >
+                Yorumlar
+              </button>
+              <button 
+                onClick={(e) => handleEsnafAccess(e, item.id)}
+                className="btn btn-outline" 
+                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#10b981', color: '#10b981' }}
+              >
+                Esnaf Paneli
+              </button>
+            </div>
           )}
         </div>
 

@@ -19,8 +19,14 @@ function AdminApp() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [user, setUser] = useState<any>(null);
   const [permissions, setPermissions] = useState<Record<string, boolean>>({});
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const handleTabChange = (tab: string, filterId: string | null = null) => {
+    setActiveTab(tab);
+    setSelectedFilter(filterId);
+  };
 
   const checkAdminStatus = async (u: any): Promise<{ isAdmin: boolean; permissions: Record<string, boolean> }> => {
     const email = u.email?.toLowerCase() || '';
@@ -137,11 +143,20 @@ function AdminApp() {
 
   return (
     <div className="admin-body min-h-screen bg-slate-950 text-white flex">
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} permissions={permissions} />
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={(tab) => handleTabChange(tab, null)} 
+        permissions={permissions} 
+      />
       <main className="flex-1 p-10 overflow-y-auto">
         {activeTab === 'dashboard' ? <DashboardOverview permissions={permissions} /> : 
          activeTab === 'notifications' ? <NotificationManagement /> : 
-         <ManageCollection key={activeTab} collectionId={activeTab} />}
+         <ManageCollection 
+            key={activeTab} 
+            collectionId={activeTab} 
+            initialFilterId={selectedFilter}
+            onTabChange={handleTabChange}
+         />}
       </main>
     </div>
   );

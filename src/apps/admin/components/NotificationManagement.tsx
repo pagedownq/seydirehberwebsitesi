@@ -11,7 +11,7 @@ import {
   serverTimestamp,
   limit 
 } from 'firebase/firestore';
-import { Send, Bell, Trash2, Loader2, Calendar } from 'lucide-react';
+import { Send, Bell, Trash2, Loader2, Calendar, MessageSquare } from 'lucide-react';
 import { sendFCMNotification } from '../../../lib/fcm';
 import { format } from 'date-fns';
 
@@ -156,17 +156,17 @@ const NotificationManagement: React.FC = () => {
              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
                 <Bell size={20} color="#f59e0b" />
              </div>
-             <h3 style={{ margin: 0 }}>Bildirim Geçmişi (Son 20)</h3>
+             <h3 style={{ margin: 0 }}>Genel Bildirim Geçmişi (Son 20)</h3>
           </div>
 
-          <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {loading ? (
               <div style={{ padding: '3rem', textAlign: 'center' }}>
                 <Loader2 className="spin" />
               </div>
-            ) : notifications.length === 0 ? (
+            ) : notifications.filter(n => n.type !== 'review_reply').length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
-                Henüz gönderilmiş bildirim bulunmuyor.
+                Henüz gönderilmiş genel bildirim bulunmuyor.
               </div>
             ) : (
               <table className="table">
@@ -178,7 +178,64 @@ const NotificationManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {notifications.map((notif) => (
+                  {notifications.filter(n => n.type !== 'review_reply').map((notif) => (
+                    <tr key={notif.id}>
+                      <td style={{ padding: '1rem' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>{notif.baslik}</div>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{notif.icerik}</div>
+                      </td>
+                      <td style={{ padding: '1rem', fontSize: '0.75rem', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                          <Calendar size={12} />
+                          {notif.tarih?.toDate ? format(notif.tarih.toDate(), 'dd.MM.yyyy HH:mm') : '...'}
+                        </div>
+                      </td>
+                      <td style={{ padding: '1rem' }}>
+                        <button 
+                          className="btn btn-outline" 
+                          style={{ padding: '0.4rem', color: '#ef4444' }} 
+                          onClick={() => handleDelete(notif.id)}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+
+        {/* Esnaf Notification History */}
+        <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '2rem', gridColumn: 'span 2' }}>
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+             <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
+                <MessageSquare size={20} color="#10b981" />
+             </div>
+             <h3 style={{ margin: 0 }}>Esnaf Bildirim Geçmişi (Yorum Yanıtları)</h3>
+          </div>
+
+          <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
+            {loading ? (
+              <div style={{ padding: '3rem', textAlign: 'center' }}>
+                <Loader2 className="spin" />
+              </div>
+            ) : notifications.filter(n => n.type === 'review_reply').length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                Henüz esnaf tarafından gönderilmiş bir yanıt bulunmuyor.
+              </div>
+            ) : (
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Başlık / İçerik</th>
+                    <th>Tarih</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {notifications.filter(n => n.type === 'review_reply').map((notif) => (
                     <tr key={notif.id}>
                       <td style={{ padding: '1rem' }}>
                         <div style={{ fontWeight: 600, color: 'var(--text)', marginBottom: '0.25rem' }}>{notif.baslik}</div>
