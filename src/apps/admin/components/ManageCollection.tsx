@@ -255,10 +255,10 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
         await updateDoc(doc(db, collectionId, editingItem.id), cleanData);
       } else {
         cleanData.created_at = serverTimestamp();
-        if (config.reorderable) {
+        if (config.reorderable && (cleanData.order === null || cleanData.order === undefined)) {
             const existingOrders = items.map(i => i.order).filter(o => typeof o === 'number');
-            const minOrder = existingOrders.length > 0 ? Math.min(...existingOrders) : 0;
-            cleanData.order = minOrder - 1;
+            const maxOrder = existingOrders.length > 0 ? Math.max(...existingOrders) : -1;
+            cleanData.order = maxOrder + 1;
         }
 
         if (collectionId === 'admins') {
@@ -486,20 +486,55 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                     <label className="label" style={{ marginBottom: 0 }}>{field.label}</label>
                     {field.key === 'expiry_date' && (
-                      <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                        <input 
-                          type="checkbox" 
-                          checked={!formData[field.key]} 
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({ ...formData, [field.key]: null });
-                            } else {
-                              setFormData({ ...formData, [field.key]: Timestamp.now() });
-                            }
-                          }} 
-                        />
-                        Sınırsız
-                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button 
+                          type="button"
+                          style={{ 
+                            fontSize: '0.7rem', 
+                            color: 'var(--admin-primary)', 
+                            fontWeight: '800', 
+                            cursor: 'pointer', 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            border: '1px solid rgba(99, 102, 241, 0.2)',
+                            padding: '4px 10px',
+                            borderRadius: '8px',
+                            textTransform: 'uppercase',
+                            transition: 'all 0.2s',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
+                            e.currentTarget.style.borderColor = 'var(--admin-primary)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
+                            e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.2)';
+                          }}
+                          onClick={() => {
+                            const nextYear = new Date();
+                            nextYear.setFullYear(nextYear.getFullYear() + 1);
+                            setFormData({ ...formData, [field.key]: Timestamp.fromDate(nextYear) });
+                          }}
+                        >
+                          <Plus size={12} /> 1 Yıl
+                        </button>
+                        <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                          <input 
+                            type="checkbox" 
+                            checked={!formData[field.key]} 
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({ ...formData, [field.key]: null });
+                              } else {
+                                setFormData({ ...formData, [field.key]: Timestamp.now() });
+                              }
+                            }} 
+                          />
+                          Sınırsız
+                        </label>
+                      </div>
                     )}
                   </div>
                   
