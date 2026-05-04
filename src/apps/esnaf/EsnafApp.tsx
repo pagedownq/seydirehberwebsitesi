@@ -1037,6 +1037,28 @@ function EsnafApp() {
                       </div>
                     </section>
 
+                    {companyData.menu_url && (
+                      <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:rotate-12 transition-transform">
+                          <Zap className="w-20 h-20 text-indigo-600" />
+                        </div>
+                        <h3 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-50 pb-4 md:pb-6 relative z-10">DİJİTAL PLATFORM</h3>
+                        
+                        <div className="space-y-6 relative z-10">
+                          <p className="text-xs text-slate-500 font-medium leading-relaxed">Müşterilerinizin göreceği dijital mağaza, menü veya kataloğunuza buradan erişin.</p>
+                          <motion.a 
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            href={companyData.menu_url}
+                            target="_blank"
+                            className="w-full bg-indigo-50 text-indigo-600 py-4 rounded-xl md:rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all flex items-center justify-center gap-3 border border-indigo-100"
+                          >
+                            <Zap className="w-4 h-4" /> DİJİTALİ GÖRÜNTÜLE
+                          </motion.a>
+                        </div>
+                      </section>
+                    )}
+
                     <section className="bg-gradient-to-br from-indigo-900 to-indigo-950 p-6 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] text-white shadow-2xl shadow-indigo-950/20 relative overflow-hidden group">
                       <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
                       <h3 className="font-black text-xl md:text-2xl mb-3 md:mb-4 tracking-tighter">İşletme Yönetimi</h3>

@@ -108,7 +108,7 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
       { key: 'konum', label: 'Harita Konumu (Link, Koordinat veya DMS)' },
       { key: 'website', label: 'Web Sitesi' },
       { key: 'instagram', label: 'Instagram (Kullanıcı adı veya Link)' },
-      { key: 'menu_url', label: 'Menü Linki (Kafe/Restoranlar için Opsiyonel)' },
+      { key: 'menu_url', label: 'Dijital Bağlantı (Mağaza, Menü, Katalog vb.)' },
       { key: 'expiry_date', label: 'Bitiş Tarihi (Sona Erme)', isDate: true },
       { key: 'order', label: 'Sıra (Görünüm Sırası)', isNumber: true },
     ],
