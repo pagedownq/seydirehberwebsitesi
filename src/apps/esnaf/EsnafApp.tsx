@@ -414,7 +414,7 @@ function EsnafApp() {
           animate={{ opacity: 1, y: 0 }}
           className="max-w-md w-full relative z-50"
         >
-          <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl p-10 overflow-hidden relative group">
+          <div className="bg-white/[0.03] backdrop-blur-3xl border border-white/10 rounded-[2rem] md:rounded-[3rem] shadow-2xl p-6 md:p-10 overflow-hidden relative group">
             <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
             
             <div className="text-center mb-10">
@@ -425,7 +425,7 @@ function EsnafApp() {
                 <div className="absolute inset-0 bg-white/20 animate-pulse" />
                 <Building2 className="h-10 w-10 text-white relative z-10" />
               </motion.div>
-              <h1 className="text-3xl font-black text-white tracking-tight mb-2">Esnaf Paneli</h1>
+              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-2">Esnaf Paneli</h1>
               <p className="text-slate-400 text-sm font-medium tracking-wide">Yönetim ve Kupon Doğrulama</p>
             </div>
 
@@ -482,21 +482,21 @@ function EsnafApp() {
               </motion.button>
             </form>
 
-            <div className="mt-10 pt-8 border-t border-white/5 flex flex-col items-center gap-4">
+            <div className="mt-8 md:mt-10 pt-6 md:pt-8 border-t border-white/5 flex flex-col items-center gap-4">
               <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.3em]">Destek Hattı</p>
-              <div className="flex gap-4 w-full relative z-30">
+              <div className="flex flex-col sm:flex-row gap-3 md:gap-4 w-full relative z-30">
                 <motion.a 
                   whileHover={{ scale: 1.05, y: -2 }}
                   href="https://wa.me/905456962060" 
                   target="_blank" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 p-4 rounded-2xl border border-emerald-500/20 font-black text-[10px] uppercase tracking-wider cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-emerald-500/10 text-emerald-400 p-3 md:p-4 rounded-xl md:rounded-2xl border border-emerald-500/20 font-black text-[9px] md:text-[10px] uppercase tracking-wider cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" /> WhatsApp
                 </motion.a>
                 <motion.a 
                   whileHover={{ scale: 1.05, y: -2 }}
                   href="tel:+905456962060" 
-                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 text-slate-300 p-4 rounded-2xl border border-white/10 font-black text-[10px] uppercase tracking-wider cursor-pointer"
+                  className="flex-1 flex items-center justify-center gap-2 bg-white/5 text-slate-300 p-3 md:p-4 rounded-xl md:rounded-2xl border border-white/10 font-black text-[9px] md:text-[10px] uppercase tracking-wider cursor-pointer"
                 >
                   <Phone className="h-4 w-4" /> Telefon
                 </motion.a>
@@ -517,7 +517,7 @@ function EsnafApp() {
       </div>
 
       <header className="sticky top-0 z-50 bg-[#f8fafc]/90 backdrop-blur-2xl border-b border-slate-200 shadow-sm">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center max-w-7xl">
+        <div className="container mx-auto px-4 md:px-6 py-3 md:py-4 flex justify-between items-center max-w-7xl">
           <div className="flex items-center gap-5">
             <motion.div 
               whileHover={{ scale: 1.05, rotate: 5 }}
@@ -539,19 +539,19 @@ function EsnafApp() {
             whileHover={{ scale: 1.05, backgroundColor: '#fee2e2' }}
             whileTap={{ scale: 0.95 }}
             onClick={handleLogout} 
-            className="flex items-center gap-2 px-6 py-2.5 text-xs font-black text-slate-600 hover:text-red-600 bg-white rounded-xl transition-all border border-slate-200 shadow-sm"
+            className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-2.5 text-[10px] md:text-xs font-black text-slate-600 hover:text-red-600 bg-white rounded-xl transition-all border border-slate-200 shadow-sm"
           >
-            <LogOut className="w-4 h-4" /> ÇIKIŞ YAP
+            <LogOut className="w-4 h-4" /> <span className="hidden md:inline">ÇIKIŞ YAP</span>
           </motion.button>
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-10 relative z-10 max-w-7xl">
+      <main className="container mx-auto px-4 md:px-6 py-6 md:py-10 relative z-10 max-w-7xl">
         {!companyId ? (
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-200 flex flex-col items-center text-center gap-6 max-w-lg mx-auto"
+            className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-200 flex flex-col items-center text-center gap-6 max-w-lg mx-auto"
           >
             <div className="p-6 bg-amber-50 text-amber-500 rounded-3xl">
               <ShieldCheck className="w-12 h-12" />
@@ -568,30 +568,31 @@ function EsnafApp() {
             </button>
           </motion.div>
         ) : (
-          <div className="space-y-10">
-            <div className="flex justify-center">
-              <nav className="flex items-center gap-1 p-1.5 bg-slate-200/50 backdrop-blur-md rounded-full border border-slate-300/50 relative overflow-hidden">
+          <div className="space-y-6 md:space-y-10">
+            <div className="flex justify-center sticky top-20 z-40 -mx-4 md:mx-0 px-4 md:px-0">
+              <nav className="w-full md:w-auto flex items-center justify-around md:justify-center gap-1 p-1 md:p-1.5 bg-slate-200/80 backdrop-blur-xl rounded-2xl md:rounded-full border border-slate-300/50 shadow-lg md:shadow-none">
                 {[
-                  { id: 'dashboard', label: 'DASHBOARD', icon: BarChart3 },
-                  { id: 'coupons', label: `KUPONLAR (${coupons.length})`, icon: Tag },
-                  { id: 'reviews', label: `YORUMLAR (${reviews.length})`, icon: MessageSquare },
-                  { id: 'company', label: 'İŞLETME', icon: Building2 },
-                  { id: 'support', label: 'DESTEK', icon: MessageCircle },
+                  { id: 'dashboard', label: 'PANEL', desktopLabel: 'DASHBOARD', icon: BarChart3 },
+                  { id: 'coupons', label: 'KUPON', desktopLabel: `KUPONLAR (${coupons.length})`, icon: Tag },
+                  { id: 'reviews', label: 'YORUM', desktopLabel: `YORUMLAR (${reviews.length})`, icon: MessageSquare },
+                  { id: 'company', label: 'FİRMA', desktopLabel: 'İŞLETME', icon: Building2 },
+                  { id: 'support', label: 'DESTEK', desktopLabel: 'DESTEK', icon: MessageCircle },
                 ].map((tab) => (
                   <button 
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)} 
-                    className={`relative px-6 py-3 rounded-full text-[10px] font-black tracking-widest transition-all flex items-center gap-2 ${activeTab === tab.id ? 'text-white' : 'text-slate-500 hover:text-slate-700'}`}
+                    className={`relative flex-1 md:flex-none px-2 md:px-6 py-2 md:py-3 rounded-xl md:rounded-full text-[8px] md:text-[10px] font-black tracking-tighter md:tracking-widest transition-all flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`}
                   >
                     {activeTab === tab.id && (
                       <motion.div 
                         layoutId="activeTab"
-                        className="absolute inset-0 bg-slate-900 rounded-full shadow-lg"
+                        className="absolute inset-0 bg-slate-900 rounded-xl md:rounded-full shadow-lg"
                         transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                       />
                     )}
-                    <tab.icon className={`w-3.5 h-3.5 relative z-10 ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`} />
-                    <span className="relative z-10">{tab.label}</span>
+                    <tab.icon className={`w-4 h-4 md:w-3.5 md:h-3.5 relative z-10 ${activeTab === tab.id ? 'text-white' : 'text-slate-500'}`} />
+                    <span className="relative z-10 block md:hidden">{tab.label}</span>
+                    <span className="relative z-10 hidden md:block">{tab.desktopLabel}</span>
                   </button>
                 ))}
               </nav>
@@ -607,20 +608,20 @@ function EsnafApp() {
               >
 
             {activeTab === 'dashboard' && (
-              <div className="grid lg:grid-cols-12 gap-10">
-                <div className="lg:col-span-8 space-y-10">
-                  <section className="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-200 relative overflow-hidden group">
+              <div className="grid lg:grid-cols-12 gap-6 md:gap-10">
+                <div className="lg:col-span-8 space-y-6 md:space-y-10">
+                  <section className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-200 relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                       <Zap className="w-40 h-40 text-indigo-600" />
                     </div>
                     
                     <div className="flex items-center gap-6 mb-12 relative z-10">
-                      <div className="p-5 bg-indigo-50 rounded-3xl text-indigo-600 border border-indigo-100 shadow-inner">
-                        <KeyRound className="w-8 h-8" />
+                      <div className="p-4 md:p-5 bg-indigo-50 rounded-2xl md:rounded-3xl text-indigo-600 border border-indigo-100 shadow-inner">
+                        <KeyRound className="w-6 h-6 md:w-8 md:h-8" />
                       </div>
                       <div>
-                        <h2 className="text-3xl font-black text-slate-900">Kupon Doğrulama</h2>
-                        <p className="text-slate-500 font-medium">6 haneli kupon kodunu onaylayarak kullanımı gerçekleştirin.</p>
+                        <h2 className="text-xl md:text-3xl font-black text-slate-900">Kupon Doğrulama</h2>
+                        <p className="text-xs md:text-sm text-slate-500 font-medium">6 haneli kupon kodunu onaylayarak kullanımı gerçekleştirin.</p>
                       </div>
                     </div>
 
@@ -632,7 +633,7 @@ function EsnafApp() {
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())} 
                           placeholder="• • • • • •" 
                           maxLength={6} 
-                          className="w-full text-center text-7xl font-black tracking-[0.4em] py-14 rounded-[2.5rem] border-2 border-slate-100 bg-slate-50/50 outline-none focus:border-indigo-500 focus:bg-white focus:shadow-2xl focus:shadow-indigo-500/10 transition-all placeholder:text-slate-200" 
+                          className="w-full text-center text-4xl md:text-7xl font-black tracking-[0.2em] md:tracking-[0.4em] py-8 md:py-14 rounded-[1.5rem] md:rounded-[2.5rem] border-2 border-slate-100 bg-slate-50/50 outline-none focus:border-indigo-500 focus:bg-white focus:shadow-2xl focus:shadow-indigo-500/10 transition-all placeholder:text-slate-200" 
                         />
                         <div className="absolute top-1/2 -translate-y-1/2 left-10 pointer-events-none opacity-20">
                           <Tag className="w-10 h-10 text-slate-400" />
@@ -644,7 +645,7 @@ function EsnafApp() {
                         whileTap={{ scale: 0.98 }}
                         type="submit" 
                         disabled={isVerifying || couponCode.length !== 6} 
-                        className="w-full bg-slate-900 text-white py-7 rounded-[2rem] font-black text-xl shadow-2xl shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-4 relative overflow-hidden group"
+                        className="w-full bg-slate-900 text-white py-5 md:py-7 rounded-[1.5rem] md:rounded-[2rem] font-black text-lg md:text-xl shadow-2xl shadow-slate-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-4 relative overflow-hidden group"
                       >
                         <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity" />
                         <div className="relative z-10 flex items-center gap-4">
@@ -676,14 +677,14 @@ function EsnafApp() {
                     </form>
                   </section>
 
-                  <section className="bg-white rounded-[3rem] p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
+                  <section className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-10 shadow-xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex items-center justify-between mb-10">
                       <h3 className="text-sm font-black text-slate-400 uppercase tracking-[0.2em]">Haftalık Trend</h3>
                       <div className="flex items-center gap-2 text-indigo-600 bg-indigo-50 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest border border-indigo-100">
                         <TrendingUp className="w-3.5 h-3.5" /> %12 ARTIŞ
                       </div>
                     </div>
-                    <div className="flex items-end justify-between gap-2 h-48">
+                    <div className="flex items-end justify-between gap-1 md:gap-2 h-32 md:h-48">
                       {stats?.dailyTrend.map((day, idx) => (
                         <div key={idx} className="flex-1 flex flex-col items-center gap-4 group">
                           <div className="w-full relative flex flex-col justify-end h-32">
@@ -707,8 +708,8 @@ function EsnafApp() {
                   </section>
                 </div>
 
-                <div className="lg:col-span-4 space-y-10">
-                  <section className="bg-white rounded-[3rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+                <div className="lg:col-span-4 space-y-6 md:space-y-10">
+                  <section className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex items-center justify-between mb-8">
                        <h2 className="text-lg font-black text-slate-900 flex items-center gap-3">
                          <BarChart3 className="w-5 h-5 text-indigo-600" /> ÖZET
@@ -724,20 +725,20 @@ function EsnafApp() {
                          { label: 'AKTİF KAMPANYA', value: coupons.filter(c => c.isActive).length, color: 'emerald', icon: Zap },
                          { label: 'ORTALAMA PUAN', value: `★ ${averageRating}`, color: 'amber', icon: Star },
                        ].map((stat, idx) => (
-                         <div key={idx} className="p-6 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:border-indigo-100 transition-all">
+                         <div key={idx} className="p-4 md:p-6 bg-slate-50 rounded-[1.5rem] md:rounded-[2rem] border border-slate-100 group hover:border-indigo-100 transition-all">
                             <div className="flex items-center justify-between mb-1">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
-                              <stat.icon className={`w-4 h-4 text-${stat.color}-500 opacity-50`} />
+                              <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+                              <stat.icon className={`w-3.5 h-3.5 md:w-4 md:h-4 text-${stat.color}-500 opacity-50`} />
                             </div>
-                            <p className={`text-3xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors`}>{stat.value}</p>
+                            <p className={`text-2xl md:text-3xl font-black text-slate-900 group-hover:text-indigo-600 transition-colors`}>{stat.value}</p>
                          </div>
                        ))}
                     </div>
                   </section>
 
-                  <section className="bg-white rounded-[3rem] p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
+                  <section className="bg-white rounded-[2rem] md:rounded-[3rem] p-6 md:p-8 shadow-xl shadow-slate-200/50 border border-slate-100">
                     <div className="flex items-center justify-between mb-8">
-                      <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <h3 className="text-[10px] md:text-sm font-black text-slate-900 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-indigo-600" /> SON İŞLEMLER
                       </h3>
                     </div>
@@ -767,9 +768,9 @@ function EsnafApp() {
               </div>
             )}
             {activeTab === 'coupons' && (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                 {coupons.length === 0 ? (
-                  <div className="col-span-full py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                  <div className="col-span-full py-20 md:py-32 text-center bg-white rounded-[2rem] md:rounded-[3rem] border-2 border-dashed border-slate-200">
                     <Tag className="w-16 h-16 text-slate-200 mx-auto mb-6" />
                     <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Henüz kampanya bulunmuyor.</p>
                   </div>
@@ -781,8 +782,8 @@ function EsnafApp() {
                     transition={{ delay: idx * 0.1 }}
                     className="group relative"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-10 transition-opacity" />
-                    <div className="relative bg-white p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col h-full overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[2rem] md:rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-10 transition-opacity" />
+                    <div className="relative bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col h-full overflow-hidden">
                       <div className="flex justify-between items-start mb-8">
                         <div className={`px-4 py-1.5 rounded-full text-[9px] font-black tracking-[0.2em] border ${
                           coupon.isActive 
@@ -824,9 +825,9 @@ function EsnafApp() {
             )}
 
             {activeTab === 'reviews' && (
-              <div className="max-w-4xl mx-auto space-y-8">
+              <div className="max-w-4xl mx-auto space-y-6 md:space-y-8">
                 {reviews.length === 0 ? (
-                  <div className="py-32 text-center bg-white rounded-[3rem] border-2 border-dashed border-slate-200">
+                  <div className="py-20 md:py-32 text-center bg-white rounded-[2rem] md:rounded-[3rem] border-2 border-dashed border-slate-200">
                     <MessageSquare className="w-16 h-16 text-slate-200 mx-auto mb-6" />
                     <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Henüz değerlendirme yok.</p>
                   </div>
@@ -836,34 +837,34 @@ function EsnafApp() {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-8 relative group overflow-hidden"
+                    className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 md:space-y-8 relative group overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                      <Star className="w-32 h-32 text-amber-500" />
+                      <Star className="w-24 h-24 md:w-32 md:h-32 text-amber-500" />
                     </div>
 
-                    <div className="flex justify-between items-start relative z-10">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-4 relative z-10">
                       <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-400 text-xl border border-white">
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl flex items-center justify-center font-black text-slate-400 text-lg md:text-xl border border-white">
                           {review.userName?.[0] || 'A'}
                         </div>
                         <div>
-                          <p className="font-black text-slate-900 text-lg">{review.userName || 'Anonim Müşteri'}</p>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                          <p className="font-black text-slate-900 text-base md:text-lg">{review.userName || 'Anonim Müşteri'}</p>
+                          <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
                             <Clock className="w-3 h-3" />
                             {review.createdAt?.toDate ? review.createdAt.toDate().toLocaleDateString('tr-TR') : ''}
                           </p>
                         </div>
                       </div>
-                      <div className="flex bg-amber-50 px-4 py-2 rounded-2xl border border-amber-100 text-amber-500 gap-1 shadow-sm">
+                      <div className="flex bg-amber-50 px-3 py-1.5 md:px-4 md:py-2 rounded-xl md:rounded-2xl border border-amber-100 text-amber-500 gap-1 shadow-sm">
                         {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < (review.rating || 0) ? 'fill-current' : 'text-slate-200'}`} />
+                          <Star key={i} className={`w-3.5 h-3.5 md:w-4 md:h-4 ${i < (review.rating || 0) ? 'fill-current' : 'text-slate-200'}`} />
                         ))}
                       </div>
                     </div>
 
                     <div className="relative z-10">
-                      <p className="text-slate-600 text-lg leading-relaxed italic font-medium bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                      <p className="text-slate-600 text-base md:text-lg leading-relaxed italic font-medium bg-slate-50 p-4 md:p-6 rounded-2xl md:rounded-3xl border border-slate-100">
                         "{review.comment}"
                       </p>
                     </div>
@@ -873,26 +874,26 @@ function EsnafApp() {
                         <motion.div 
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
-                          className="ml-10 space-y-4"
+                          className="sm:ml-10 space-y-4"
                         >
                           <div className="relative">
                             <textarea 
                               value={replyText}
                               onChange={(e) => setReplyText(e.target.value)}
                               placeholder="Müşterinize profesyonel bir yanıt verin..."
-                              className="w-full p-8 rounded-[2rem] bg-slate-50 border border-slate-200 text-slate-700 focus:bg-white focus:border-indigo-500 outline-none transition-all h-32 shadow-inner font-medium"
+                              className="w-full p-6 md:p-8 rounded-[1.5rem] md:rounded-[2rem] bg-slate-50 border border-slate-200 text-slate-700 focus:bg-white focus:border-indigo-500 outline-none transition-all h-32 shadow-inner font-medium text-sm md:text-base"
                             />
                             <div className="absolute top-4 right-4 text-indigo-200">
-                              <MessageCircle className="w-6 h-6" />
+                              <MessageCircle className="w-5 h-5 md:w-6 md:h-6" />
                             </div>
                           </div>
-                          <div className="flex gap-4">
+                          <div className="flex flex-col sm:flex-row gap-3 md:gap-4">
                             <motion.button 
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => handleReply(review.id, review.userId)}
                               disabled={isSubmittingReply || !replyText.trim()}
-                              className="flex-1 bg-indigo-600 text-white py-4 rounded-2xl font-black text-xs shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 uppercase tracking-widest"
+                              className="flex-1 bg-indigo-600 text-white py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-3 uppercase tracking-widest"
                             >
                               {isSubmittingReply ? <RefreshCw className="w-4 h-4 animate-spin" /> : <><Send className="w-4 h-4" /> YANITI GÖNDER</>}
                             </motion.button>
@@ -901,7 +902,7 @@ function EsnafApp() {
                                 setReplyingTo(null);
                                 setReplyText("");
                               }}
-                              className="px-8 bg-slate-100 text-slate-500 py-4 rounded-2xl font-black text-xs hover:bg-slate-200 transition-all uppercase tracking-widest"
+                              className="px-6 md:px-8 bg-slate-100 text-slate-500 py-3 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs hover:bg-slate-200 transition-all uppercase tracking-widest"
                             >
                               İPTAL
                             </button>
@@ -911,51 +912,51 @@ function EsnafApp() {
                         <motion.div 
                           initial={{ opacity: 0, height: 0 }}
                           animate={{ opacity: 1, height: 'auto' }}
-                          className="ml-10 p-8 bg-indigo-50/30 rounded-[2.5rem] border border-indigo-100/50 relative overflow-hidden group/reply"
+                          className="sm:ml-10 p-6 md:p-8 bg-indigo-50/30 rounded-[1.5rem] md:rounded-[2.5rem] border border-indigo-100/50 relative overflow-hidden group/reply"
                         >
-                          <div className="flex items-center gap-4 mb-4">
+                          <div className="flex items-center gap-3 md:gap-4 mb-4">
                             <img 
                               src={companyData?.image_url || companyData?.gorsel || '/assets/fotoyok.png'} 
-                              className="w-10 h-10 rounded-xl object-cover border-2 border-white shadow-md shadow-indigo-200"
+                              className="w-8 h-8 md:w-10 md:h-10 rounded-lg md:rounded-xl object-cover border-2 border-white shadow-md shadow-indigo-200"
                               alt="İşletme"
                             />
                             <div>
                               <div className="flex items-center gap-2">
-                                <p className="text-[10px] font-black text-indigo-700 uppercase tracking-widest">{companyName}</p>
-                                <span className="bg-indigo-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full">YÖNETİCİ</span>
+                                <p className="text-[9px] md:text-[10px] font-black text-indigo-700 uppercase tracking-widest">{companyName}</p>
+                                <span className="bg-indigo-600 text-white text-[7px] md:text-[8px] font-black px-1.5 py-0.5 rounded-full">YÖNETİCİ</span>
                               </div>
-                              <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-tighter">İŞLETME YANITI</p>
+                              <p className="text-[8px] md:text-[9px] text-indigo-400 font-bold uppercase tracking-tighter">İŞLETME YANITI</p>
                             </div>
                           </div>
-                          <p className="text-slate-700 leading-relaxed font-medium">{review.reply.text}</p>
+                          <p className="text-sm md:text-base text-slate-700 leading-relaxed font-medium">{review.reply.text}</p>
                           
-                          <div className="mt-6 flex gap-4 opacity-0 group-hover/reply:opacity-100 transition-opacity">
+                          <div className="mt-4 md:mt-6 flex gap-3 md:gap-4 opacity-100 sm:opacity-0 group-hover/reply:opacity-100 transition-opacity">
                              <button 
                               onClick={() => {
                                 setReplyingTo(review.id);
                                 setReplyText(review.reply.text);
                               }}
-                              className="px-4 py-2 bg-white text-indigo-600 rounded-xl text-[10px] font-black border border-indigo-100 shadow-sm hover:bg-indigo-50"
+                              className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-indigo-600 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black border border-indigo-100 shadow-sm hover:bg-indigo-50"
                             >
                               DÜZENLE
                             </button>
                             <button 
                               onClick={() => deleteReply(review.id)}
-                              className="px-4 py-2 bg-white text-rose-500 rounded-xl text-[10px] font-black border border-rose-100 shadow-sm hover:bg-rose-50"
+                              className="px-3 py-1.5 md:px-4 md:py-2 bg-white text-rose-500 rounded-lg md:rounded-xl text-[9px] md:text-[10px] font-black border border-rose-100 shadow-sm hover:bg-rose-50"
                             >
                               SİL
                             </button>
                           </div>
                         </motion.div>
                       ) : (
-                        <div className="ml-10 pt-4">
+                        <div className="sm:ml-10 pt-4">
                           <motion.button 
                             whileHover={{ x: 5 }}
                             onClick={() => setReplyingTo(review.id)}
-                            className="flex items-center gap-3 text-xs font-black text-indigo-600 hover:text-indigo-800 transition-all group/btn"
+                            className="flex items-center gap-2 md:gap-3 text-[10px] md:text-xs font-black text-indigo-600 hover:text-indigo-800 transition-all group/btn"
                           >
-                            <div className="w-8 h-8 bg-indigo-50 rounded-xl flex items-center justify-center group-hover/btn:bg-indigo-600 group-hover/btn:text-white transition-colors">
-                              <MessageSquare className="w-4 h-4" />
+                            <div className="w-7 h-7 md:w-8 md:h-8 bg-indigo-50 rounded-lg md:rounded-xl flex items-center justify-center group-hover/btn:bg-indigo-600 group-hover/btn:text-white transition-colors">
+                              <MessageSquare className="w-3.5 h-3.5 md:w-4 md:h-4" />
                             </div>
                             BU YORUMU YANITLA
                           </motion.button>
@@ -970,7 +971,7 @@ function EsnafApp() {
             {activeTab === 'company' && companyData && (
               <div className="max-w-6xl mx-auto space-y-12 pb-20">
                 {/* HERO SECTION */}
-                <div className="relative h-80 rounded-[4rem] overflow-hidden shadow-2xl border-4 border-white">
+                <div className="relative h-64 md:h-80 rounded-[2rem] md:rounded-[4rem] overflow-hidden shadow-2xl border-4 border-white">
                   <motion.img 
                     initial={{ scale: 1.1 }}
                     animate={{ scale: 1 }}
@@ -979,25 +980,25 @@ function EsnafApp() {
                     className="w-full h-full object-cover"
                     alt="Kapak"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-14">
-                    <div className="w-full flex justify-between items-end">
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-3">
-                          <span className="bg-white/20 backdrop-blur-md text-white text-[10px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest border border-white/20">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/20 to-transparent flex items-end p-6 md:p-14">
+                    <div className="w-full flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+                      <div className="space-y-2 md:space-y-4">
+                        <div className="flex items-center gap-2 md:gap-3">
+                          <span className="bg-white/20 backdrop-blur-md text-white text-[8px] md:text-[10px] font-black px-3 py-1 md:px-4 md:py-1.5 rounded-full uppercase tracking-widest border border-white/20">
                             {companyData.kategori || 'İşletme'}
                           </span>
-                          <div className="flex items-center gap-1.5 bg-amber-500 text-white px-3 py-1 rounded-full text-[10px] font-black shadow-lg shadow-amber-500/20">
-                            <Star className="w-3 h-3 fill-current" />
+                          <div className="flex items-center gap-1 bg-amber-500 text-white px-2 py-1 md:px-3 md:py-1 rounded-full text-[8px] md:text-[10px] font-black shadow-lg shadow-amber-500/20">
+                            <Star className="w-2.5 h-2.5 md:w-3 md:h-3 fill-current" />
                             <span>{averageRating} PUAN</span>
                           </div>
                         </div>
-                        <h1 className="text-5xl font-black text-white tracking-tighter drop-shadow-2xl">{companyName}</h1>
+                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter drop-shadow-2xl">{companyName}</h1>
                       </div>
                       <motion.button 
                          whileHover={{ scale: 1.05 }}
                          whileTap={{ scale: 0.95 }}
                          onClick={() => setActiveTab('support')}
-                         className="bg-white text-slate-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-2xl hover:bg-slate-50 transition-colors"
+                         className="bg-white text-slate-900 px-6 py-3 md:px-8 md:py-4 rounded-xl md:rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-widest shadow-2xl hover:bg-slate-50 transition-colors w-full md:w-auto"
                       >
                         BİLGİLERİ GÜNCELLE
                       </motion.button>
@@ -1005,41 +1006,41 @@ function EsnafApp() {
                   </div>
                 </div>
 
-                <div className="grid lg:grid-cols-12 gap-12">
-                  <div className="lg:col-span-4 space-y-8">
-                    <section className="bg-white p-10 rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-8 relative overflow-hidden">
+                <div className="grid lg:grid-cols-12 gap-8 md:gap-12">
+                  <div className="lg:col-span-4 space-y-6 md:space-y-8">
+                    <section className="bg-white p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] shadow-xl shadow-slate-200/50 border border-slate-100 space-y-6 md:space-y-8 relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-6 opacity-5">
-                        <Phone className="w-24 h-24 text-indigo-600" />
+                        <Phone className="w-16 h-16 md:w-24 md:h-24 text-indigo-600" />
                       </div>
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-50 pb-6 relative z-10">İLETİŞİM</h3>
+                      <h3 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em] border-b border-slate-50 pb-4 md:pb-6 relative z-10">İLETİŞİM</h3>
                       
-                      <div className="space-y-8 relative z-10">
-                        <div className="flex items-start gap-5 group">
-                          <div className="p-4 bg-slate-50 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                            <Phone className="w-6 h-6" />
+                      <div className="space-y-6 md:space-y-8 relative z-10">
+                        <div className="flex items-start gap-4 md:gap-5 group">
+                          <div className="p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                            <Phone className="w-5 h-5 md:w-6 md:h-6" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter">TELEFON HATTI</p>
-                            <p className="font-black text-slate-900 text-lg">{companyData.iletisim || '-'}</p>
+                            <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter">TELEFON HATTI</p>
+                            <p className="font-black text-slate-900 text-base md:text-lg">{companyData.iletisim || '-'}</p>
                           </div>
                         </div>
                         
-                        <div className="flex items-start gap-5 group">
-                          <div className="p-4 bg-slate-50 rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
-                            <MapPin className="w-6 h-6" />
+                        <div className="flex items-start gap-4 md:gap-5 group">
+                          <div className="p-3 md:p-4 bg-slate-50 rounded-xl md:rounded-2xl group-hover:bg-indigo-600 group-hover:text-white transition-all duration-300">
+                            <MapPin className="w-5 h-5 md:w-6 md:h-6" />
                           </div>
                           <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter">KONUM / ADRES</p>
-                            <p className="font-bold text-slate-600 text-sm leading-relaxed">{companyData.adres || '-'}</p>
+                            <p className="text-[9px] md:text-[10px] font-black text-slate-400 uppercase mb-1 tracking-tighter">KONUM / ADRES</p>
+                            <p className="font-bold text-slate-600 text-xs md:text-sm leading-relaxed">{companyData.adres || '-'}</p>
                           </div>
                         </div>
                       </div>
                     </section>
 
-                    <section className="bg-gradient-to-br from-indigo-900 to-indigo-950 p-10 rounded-[3.5rem] text-white shadow-2xl shadow-indigo-950/20 relative overflow-hidden group">
+                    <section className="bg-gradient-to-br from-indigo-900 to-indigo-950 p-6 md:p-10 rounded-[2.5rem] md:rounded-[3.5rem] text-white shadow-2xl shadow-indigo-950/20 relative overflow-hidden group">
                       <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
-                      <h3 className="font-black text-2xl mb-4 tracking-tighter">İşletme Yönetimi</h3>
-                      <p className="text-indigo-200/80 text-sm mb-10 leading-relaxed font-medium">Fotoğraf eklemek, çalışma saatlerini düzenlemek veya kampanya oluşturmak için WhatsApp hattımızdan talep oluşturabilirsiniz.</p>
+                      <h3 className="font-black text-xl md:text-2xl mb-3 md:mb-4 tracking-tighter">İşletme Yönetimi</h3>
+                      <p className="text-indigo-200/80 text-xs md:text-sm mb-8 md:mb-10 leading-relaxed font-medium">Fotoğraf eklemek, çalışma saatlerini düzenlemek veya kampanya oluşturmak için WhatsApp hattımızdan talep oluşturabilirsiniz.</p>
                       <motion.button 
                         whileHover={{ scale: 1.02, y: -2 }}
                         whileTap={{ scale: 0.98 }}
@@ -1048,52 +1049,52 @@ function EsnafApp() {
                           const message = encodeURIComponent(`${companyName} (${companyId}) işletme bilgilerimi güncellemek istiyorum.`);
                           window.open(`https://wa.me/${adminPhone}?text=${message}`, '_blank');
                         }}
-                        className="w-full bg-white text-indigo-950 py-5 rounded-[1.5rem] font-black text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
+                        className="w-full bg-white text-indigo-950 py-4 md:py-5 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-xs uppercase tracking-widest hover:bg-indigo-50 transition-all flex items-center justify-center gap-3 shadow-xl"
                       >
-                        <MessageCircle className="w-5 h-5" /> WHATSAPP TALEP
+                        <MessageCircle className="w-4 h-4 md:w-5 md:h-5" /> WHATSAPP TALEP
                       </motion.button>
                     </section>
                   </div>
 
-                  <div className="lg:col-span-8 space-y-12">
-                    <section className="bg-white p-12 rounded-[3.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
+                  <div className="lg:col-span-8 space-y-8 md:space-y-12">
+                    <section className="bg-white p-8 md:p-12 rounded-[2.5rem] md:rounded-[3.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 relative overflow-hidden">
                       <div className="absolute top-0 right-0 p-10 opacity-[0.03]">
-                        <Building2 className="w-60 h-60 text-indigo-950" />
+                        <Building2 className="w-40 h-40 md:w-60 md:h-60 text-indigo-950" />
                       </div>
-                      <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-8 border-b border-slate-50 pb-6">HAKKINDA</h3>
-                      <p className="text-slate-600 leading-relaxed text-xl font-medium italic relative z-10">
+                      <h3 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-6 md:mb-8 border-b border-slate-50 pb-4 md:pb-6">HAKKINDA</h3>
+                      <p className="text-slate-600 leading-relaxed text-lg md:text-xl font-medium italic relative z-10">
                         "{companyData.hakkinda || 'Bu işletme hakkında detaylı bilgi henüz girilmemiş.'}"
                       </p>
                     </section>
 
-                    <section className="space-y-8">
+                    <section className="space-y-6 md:space-y-8">
                       <div className="flex items-center justify-between">
-                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.3em]">MEDYA GALERİSİ</h3>
-                        <div className="flex gap-3">
-                           <button onClick={() => scrollGallery('left')} className="p-3 bg-white rounded-2xl shadow-lg hover:bg-indigo-600 hover:text-white transition-all border border-slate-100">
-                             <ChevronLeft className="w-5 h-5" />
+                        <h3 className="text-[10px] md:text-xs font-black text-slate-400 uppercase tracking-[0.3em]">MEDYA GALERİSİ</h3>
+                        <div className="flex gap-2 md:gap-3">
+                           <button onClick={() => scrollGallery('left')} className="p-2.5 md:p-3 bg-white rounded-xl md:rounded-2xl shadow-lg hover:bg-indigo-600 hover:text-white transition-all border border-slate-100">
+                             <ChevronLeft className="w-4 h-4 md:w-5 md:h-5" />
                            </button>
-                           <button onClick={() => scrollGallery('right')} className="p-3 bg-white rounded-2xl shadow-lg hover:bg-indigo-600 hover:text-white transition-all border border-slate-100">
-                             <ChevronRight className="w-5 h-5" />
+                           <button onClick={() => scrollGallery('right')} className="p-2.5 md:p-3 bg-white rounded-xl md:rounded-2xl shadow-lg hover:bg-indigo-600 hover:text-white transition-all border border-slate-100">
+                             <ChevronRight className="w-4 h-4 md:w-5 md:h-5" />
                            </button>
                         </div>
                       </div>
                       
                       <div 
                         ref={galleryRef}
-                        className="flex gap-8 overflow-x-auto pb-10 px-2 no-scrollbar scroll-smooth" 
+                        className="flex gap-4 md:gap-8 overflow-x-auto pb-10 px-2 no-scrollbar scroll-smooth" 
                       >
                         {companyData.images?.map((url: string, index: number) => (
                           <motion.div 
                             key={index} 
                             whileHover={{ scale: 1.05, y: -5 }}
                             onClick={() => setSelectedImage(url)}
-                            className="flex-none w-[400px] aspect-video rounded-[3rem] overflow-hidden border-8 border-white shadow-2xl cursor-zoom-in group relative"
+                            className="flex-none w-[280px] md:w-[400px] aspect-video rounded-[2rem] md:rounded-[3rem] overflow-hidden border-4 md:border-8 border-white shadow-2xl cursor-zoom-in group relative"
                           >
                             <img src={url} className="w-full h-full object-cover" alt={`Medya ${index + 1}`} />
                             <div className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                               <div className="bg-white text-slate-900 p-4 rounded-full shadow-2xl">
-                                 <Maximize2 className="w-6 h-6" />
+                               <div className="bg-white text-slate-900 p-3 md:p-4 rounded-full shadow-2xl">
+                                 <Maximize2 className="w-5 h-5 md:w-6 md:h-6" />
                                </div>
                             </div>
                           </motion.div>
@@ -1137,39 +1138,39 @@ function EsnafApp() {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="max-w-4xl mx-auto bg-white p-16 rounded-[4rem] shadow-2xl shadow-slate-200/50 border border-slate-100 text-center relative overflow-hidden"
+                className="max-w-4xl mx-auto bg-white p-8 md:p-16 rounded-[2rem] md:rounded-[4rem] shadow-2xl shadow-slate-200/50 border border-slate-100 text-center relative overflow-hidden"
               >
                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-violet-500 to-emerald-500" />
                  
-                 <div className="w-24 h-24 bg-indigo-50 text-indigo-600 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 shadow-inner">
-                   <MessageCircle className="w-12 h-12" />
+                 <div className="w-16 h-16 md:w-24 md:h-24 bg-indigo-50 text-indigo-600 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center mx-auto mb-6 md:mb-10 shadow-inner">
+                   <MessageCircle className="w-8 h-8 md:w-12 md:h-12" />
                  </div>
                  
-                 <h2 className="text-4xl font-black text-slate-900 mb-6 tracking-tight">Kurumsal Destek Merkezi</h2>
-                 <p className="text-slate-500 font-medium mb-16 text-lg max-w-2xl mx-auto">Sistem kullanımı, teknik sorunlar veya işletme bilgilerinizdeki güncellemeler için yanınızdayız.</p>
+                 <h2 className="text-2xl md:text-4xl font-black text-slate-900 mb-4 md:mb-6 tracking-tight">Kurumsal Destek Merkezi</h2>
+                 <p className="text-slate-500 font-medium mb-10 md:mb-16 text-base md:text-lg max-w-2xl mx-auto">Sistem kullanımı, teknik sorunlar veya işletme bilgilerinizdeki güncellemeler için yanınızdayız.</p>
                  
-                 <div className="grid sm:grid-cols-2 gap-8">
+                 <div className="grid sm:grid-cols-2 gap-6 md:gap-8">
                     <motion.a 
                       whileHover={{ y: -10, scale: 1.02 }}
                       href="https://wa.me/905456962060" 
                       target="_blank" 
-                      className="p-12 bg-emerald-50 rounded-[3rem] border border-emerald-100 hover:border-emerald-200 transition-all group relative overflow-hidden"
+                      className="p-8 md:p-12 bg-emerald-50 rounded-[2rem] md:rounded-[3rem] border border-emerald-100 hover:border-emerald-200 transition-all group relative overflow-hidden"
                     >
                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors" />
-                       <MessageCircle className="w-12 h-12 text-emerald-600 mx-auto mb-6 group-hover:animate-bounce" />
-                       <p className="text-xs font-black text-emerald-700 uppercase tracking-[0.3em] mb-2">HIZLI YANIT</p>
-                       <p className="font-black text-emerald-950 text-xl">WhatsApp Hattı</p>
+                       <MessageCircle className="w-10 h-10 md:w-12 md:h-12 text-emerald-600 mx-auto mb-4 md:mb-6 group-hover:animate-bounce" />
+                       <p className="text-[10px] font-black text-emerald-700 uppercase tracking-[0.3em] mb-2">HIZLI YANIT</p>
+                       <p className="font-black text-emerald-950 text-lg md:text-xl">WhatsApp Hattı</p>
                     </motion.a>
 
                     <motion.a 
                       whileHover={{ y: -10, scale: 1.02 }}
                       href="tel:+905456962060" 
-                      className="p-12 bg-slate-900 rounded-[3rem] text-white hover:bg-slate-800 transition-all group relative overflow-hidden shadow-2xl shadow-slate-900/20"
+                      className="p-8 md:p-12 bg-slate-900 rounded-[2rem] md:rounded-[3rem] text-white hover:bg-slate-800 transition-all group relative overflow-hidden shadow-2xl shadow-slate-900/20"
                     >
                        <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors" />
-                       <Phone className="w-12 h-12 text-white mx-auto mb-6 group-hover:animate-bounce" />
-                       <p className="text-xs font-black text-slate-400 uppercase tracking-[0.3em] mb-2">BİZE ULAŞIN</p>
-                       <p className="font-black text-white text-xl">Müşteri Temsilcisi</p>
+                       <Phone className="w-10 h-10 md:w-12 md:h-12 text-white mx-auto mb-4 md:mb-6 group-hover:animate-bounce" />
+                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-2">BİZE ULAŞIN</p>
+                       <p className="font-black text-white text-lg md:text-xl">Müşteri Temsilcisi</p>
                     </motion.a>
                  </div>
 
