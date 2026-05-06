@@ -18,6 +18,7 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
     otobus_saatleri: 0,
     banners: 0,
     reviews: 0,
+    firma_reviews: 0,
     esnaf_users: 0,
     coupons: 0,
     bekleyen_sikayetler: 0
@@ -69,11 +70,20 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
       });
     }
 
+    let unsubscribeFirmaReviews = () => {};
+    if (permissions['canManageReviews']) {
+      const qFirma = query(collection(db, 'reviews'), where('targetType', '==', 'company'));
+      unsubscribeFirmaReviews = onSnapshot(qFirma, (snap) => {
+        setStats(prev => ({ ...prev, firma_reviews: snap.size }));
+      });
+    }
+
     return () => {
       unsubscribes.forEach(unsub => unsub());
       unsubscribeSupport();
       unsubscribeUsed();
       unsubscribeReports();
+      unsubscribeFirmaReviews();
     };
   }, [permissions]);
 
@@ -95,6 +105,7 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
         {permissions['canManageCoupons'] && <StatCard icon={Tag} label="Kupon Sayısı" value={stats.coupons} max={1000} color="#f97316" />}
         {permissions['canManageCoupons'] && <StatCard icon={CheckCircle2} label="Kullanılan Kuponlar" value={(stats as any).used_coupons || 0} max={stats.coupons || 100} color="#22c55e" />}
         {permissions['canManageReviews'] && <StatCard icon={MessageSquare} label="Yorumlar" value={stats.reviews} max={1000} color="#8b5cf6" />}
+        {permissions['canManageReviews'] && <StatCard icon={Store} label="Firma Yorumları" value={stats.firma_reviews} max={1000} color="#6366f1" />}
         {permissions['canManageReports'] && <StatCard icon={ShieldCheck} label="Bekleyen Şikayet" value={stats.bekleyen_sikayetler} max={10} color="#f43f5e" />}
         {permissions['canManageEsnaf'] && <StatCard icon={Users} label="Esnaf Hesapları" value={stats.esnaf_users} max={100} color="#06b6d4" />}
         {permissions['canManageBanners'] && <StatCard icon={Image} label="Bannerler" value={stats.banners} max={10} color="#db2777" />}

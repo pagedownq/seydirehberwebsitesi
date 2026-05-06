@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar';
 import DashboardOverview from './components/DashboardOverview';
 import ManageCollection from './components/ManageCollection';
 import NotificationManagement from './components/NotificationManagement';
+import SupportNotificationWatcher from './components/SupportNotificationWatcher';
 import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
@@ -30,34 +31,34 @@ function AdminApp() {
 
   const checkAdminStatus = async (u: any): Promise<{ isAdmin: boolean; permissions: Record<string, boolean> }> => {
     const email = u.email?.toLowerCase() || '';
+    let isAdmin = false;
+    let permissions: Record<string, boolean> = {};
+
     if (ADMIN_EMAILS.map(e => e.toLowerCase()).includes(email)) {
-      return {
-        isAdmin: true,
-        permissions: {
-          canManageBanners: true,
-          canManageEvents: true,
-          canManageNotaries: true,
-          canManageMarkets: true,
-          canManageBuses: true,
-          canManagePlaces: true,
-          canManageCompanies: true,
-          canManageSupport: true,
-          canManageReviews: true,
-          canManageReports: true,
-          canManageNotifications: true,
-          canManageEsnaf: true,
-          canManageCoupons: true,
-          canManageAdmins: true,
-        }
+      isAdmin = true;
+      permissions = {
+        canManageBanners: true,
+        canManageEvents: true,
+        canManageNotaries: true,
+        canManageMarkets: true,
+        canManageBuses: true,
+        canManagePlaces: true,
+        canManageCompanies: true,
+        canManageSupport: true,
+        canManageReviews: true,
+        canManageReports: true,
+        canManageNotifications: true,
+        canManageEsnaf: true,
+        canManageCoupons: true,
+        canManageAdmins: true,
       };
-    }
-    try {
-      const adminDoc = await getDoc(doc(db, 'admins', email));
-      if (adminDoc.exists() && adminDoc.data()?.isActive !== false) {
-        const data = adminDoc.data();
-        return {
-          isAdmin: true,
-          permissions: {
+    } else {
+      try {
+        const adminDoc = await getDoc(doc(db, 'admins', email));
+        if (adminDoc.exists() && adminDoc.data()?.isActive !== false) {
+          const data = adminDoc.data();
+          isAdmin = true;
+          permissions = {
             canManageBanners: data.canManageBanners || false,
             canManageEvents: data.canManageEvents || false,
             canManageNotaries: data.canManageNotaries || false,
@@ -72,13 +73,29 @@ function AdminApp() {
             canManageEsnaf: data.canManageEsnaf || false,
             canManageCoupons: data.canManageCoupons || false,
             canManageAdmins: data.canManageAdmins || false,
-          }
-        };
+          };
+        }
+      } catch (err) {
+        console.error("Admin check error:", err);
       }
-      return { isAdmin: false, permissions: {} };
-    } catch (err) {
-      return { isAdmin: false, permissions: {} };
     }
+
+    if (isAdmin) {
+      // Save/Update admin info with UID for notification targeting
+      try {
+        const { setDoc } = await import('firebase/firestore');
+        await setDoc(doc(db, 'admins', email), {
+          uid: u.uid,
+          email: email,
+          lastLogin: new Date(),
+          ...(permissions.canManageAdmins ? {} : { permissions }) // Don't overwrite if it's a superadmin from the list
+        }, { merge: true });
+      } catch (err) {
+        console.error("Failed to update admin UID:", err);
+      }
+    }
+
+    return { isAdmin, permissions };
   };
 
   useEffect(() => {
@@ -194,6 +211,7 @@ function AdminApp() {
           </button>
         </div>
 
+        <SupportNotificationWatcher />
         <div className="max-w-7xl mx-auto">
           {activeTab === 'dashboard' ? <DashboardOverview permissions={permissions} /> : 
            activeTab === 'notifications' ? <NotificationManagement /> : 
