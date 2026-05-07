@@ -12,7 +12,12 @@ export default defineConfig({
       hostname: 'https://seydirehber.com.tr',
       dynamicRoutes: [
         '/',
+        '/#features',
+        '/#faq',
+        '/#download',
         '/about',
+        '/privacy',
+        '/kvkk',
         '/politikalar'
       ]
     }),
