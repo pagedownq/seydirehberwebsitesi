@@ -11,6 +11,7 @@ import {
   doc,
   updateDoc,
   addDoc,
+  deleteDoc,
   increment,
   onSnapshot,
   orderBy,
@@ -41,7 +42,13 @@ import {
   Send,
   Zap,
   ShoppingBag,
-  Store
+  Store,
+  Plus,
+  Trash2,
+  Edit2,
+  Calendar,
+  Percent,
+  Hash
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -75,6 +82,16 @@ function EsnafApp() {
   } | null>(null);
 
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showAddCouponModal, setShowAddCouponModal] = useState(false);
+  const [editingCouponId, setEditingCouponId] = useState<string | null>(null);
+  const [isAddingCoupon, setIsAddingCoupon] = useState(false);
+  const [newCoupon, setNewCoupon] = useState({
+    title: "",
+    description: "",
+    discountPercentage: "",
+    expiryDate: "",
+    totalLimit: ""
+  });
   const galleryRef = React.useRef<HTMLDivElement>(null);
 
   const scrollGallery = (direction: 'left' | 'right') => {
@@ -424,6 +441,76 @@ function EsnafApp() {
       });
     } catch (err) {
       console.error("Delete reply error:", err);
+    }
+  };
+
+  const handleAddCoupon = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyId || !companyName) return;
+    setIsAddingCoupon(true);
+    try {
+      const couponData = {
+        title: newCoupon.title,
+        description: newCoupon.description,
+        discountPercentage: Number(newCoupon.discountPercentage) || 0,
+        companyId: companyId,
+        companyName: companyName,
+        expiry_date: newCoupon.expiryDate ? Timestamp.fromDate(new Date(newCoupon.expiryDate)) : null,
+        total_limit: newCoupon.totalLimit ? Number(newCoupon.totalLimit) : null,
+        isActive: true,
+        used_count: editingCouponId ? undefined : 0, // Don't reset count on edit
+        created_at: editingCouponId ? undefined : Timestamp.now()
+      };
+
+      // Remove undefined fields for update
+      const cleanData = Object.fromEntries(Object.entries(couponData).filter(([_, v]) => v !== undefined));
+
+      if (editingCouponId) {
+        await updateDoc(doc(db, "coupons", editingCouponId), cleanData);
+      } else {
+        await addDoc(collection(db, "coupons"), cleanData);
+      }
+
+      setShowAddCouponModal(false);
+      setEditingCouponId(null);
+      setNewCoupon({
+        title: "",
+        description: "",
+        discountPercentage: "",
+        expiryDate: "",
+        totalLimit: ""
+      });
+    } catch (err) {
+      console.error("Add/Update coupon error:", err);
+      alert("Kupon kaydedilirken bir hata oluştu.");
+    } finally {
+      setIsAddingCoupon(false);
+    }
+  };
+
+  const openEditModal = (coupon: any) => {
+    setEditingCouponId(coupon.id);
+    setNewCoupon({
+      title: coupon.title,
+      description: coupon.description,
+      discountPercentage: String(coupon.discountPercentage),
+      expiryDate: coupon.expiry_date ? coupon.expiry_date.toDate().toISOString().split('T')[0] : "",
+      totalLimit: coupon.total_limit ? String(coupon.total_limit) : ""
+    });
+    setShowAddCouponModal(true);
+  };
+
+  const deleteCoupon = async (couponId: string) => {
+    if (!window.confirm("Bu kampanyayı silmek istediğinize emin misiniz? Bu işlem geri alınamaz.")) return;
+    try {
+      await updateDoc(doc(db, "coupons", couponId), { isActive: false });
+      // Or actually delete it:
+      // await deleteDoc(doc(db, "coupons", couponId));
+      // User might prefer marking as inactive or deleting. The admin panel seems to delete.
+      await deleteDoc(doc(db, "coupons", couponId));
+    } catch (err) {
+      console.error("Delete coupon error:", err);
+      alert("Kupon silinemedi.");
     }
   };
 
@@ -809,60 +896,249 @@ function EsnafApp() {
                     </div>
                   </div>
                 )}
+
                 {activeTab === 'coupons' && (
-                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-                    {coupons.length === 0 ? (
-                      <div className="col-span-full py-20 md:py-32 text-center bg-white rounded-[2rem] md:rounded-[3rem] border-2 border-dashed border-slate-200">
-                        <Tag className="w-16 h-16 text-slate-200 mx-auto mb-6" />
-                        <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Henüz kampanya bulunmuyor.</p>
-                      </div>
-                    ) : coupons.map((coupon, idx) => (
-                      <motion.div
-                        key={coupon.id}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: idx * 0.1 }}
-                        className="group relative"
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[2rem] md:rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-10 transition-opacity" />
-                        <div className="relative bg-white p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col h-full overflow-hidden">
-                          <div className="flex justify-between items-start mb-8">
-                            <div className={`px-4 py-1.5 rounded-full text-[9px] font-black tracking-[0.2em] border ${coupon.isActive
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                                : 'bg-slate-50 text-slate-400 border-slate-100'
-                              }`}>
-                              {coupon.isActive ? 'AKTİF KAMPANYA' : 'PASİF'}
-                            </div>
-                            <div className="p-3 bg-slate-50 rounded-2xl group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
-                              <Tag className="w-5 h-5" />
-                            </div>
-                          </div>
-
-                          <h3 className="text-xl font-black text-slate-900 mb-3 group-hover:text-indigo-600 transition-colors leading-tight">
-                            {coupon.title || 'İsimsiz Kupon'}
-                          </h3>
-                          <p className="text-sm text-slate-500 mb-8 flex-1 leading-relaxed font-medium">
-                            {coupon.description}
-                          </p>
-
-                          <div className="pt-8 border-t border-slate-100 mt-auto">
-                            <div className="flex justify-between text-[10px] font-black text-slate-400 mb-3 uppercase tracking-widest">
-                              <span>KULLANIM ORANI</span>
-                              <span className="text-slate-900">{coupon.used_count || 0} / {coupon.total_limit || '∞'}</span>
-                            </div>
-                            <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-50">
-                              <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${Math.min(((coupon.used_count || 0) / (coupon.total_limit || 1)) * 100, 100)}%` }}
-                                transition={{ duration: 1, delay: 0.5 }}
-                                className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full shadow-sm"
-                              />
-                            </div>
-                          </div>
+                  <>
+                    <div className="space-y-8">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                        <div>
+                          <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Kampanya Yönetimi</h2>
+                          <p className="text-sm md:text-base text-slate-500 font-medium">Aktif kampanyalarınızı takip edin ve yenilerini oluşturun.</p>
                         </div>
-                      </motion.div>
-                    ))}
-                  </div>
+                        <motion.button
+                          whileHover={{ scale: 1.02, y: -2 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setEditingCouponId(null);
+                            setNewCoupon({
+                              title: "",
+                              description: "",
+                              discountPercentage: "",
+                              expiryDate: "",
+                              totalLimit: ""
+                            });
+                            setShowAddCouponModal(true);
+                          }}
+                          className="bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs md:text-sm uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/20 flex items-center justify-center gap-3 transition-all"
+                        >
+                          <Plus className="w-5 h-5" /> YENİ KAMPANYA OLUŞTUR
+                        </motion.button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+                        {coupons.length === 0 ? (
+                          <div className="col-span-full py-20 md:py-32 text-center bg-white rounded-[2rem] md:rounded-[3rem] border-2 border-dashed border-slate-200 shadow-sm">
+                            <Tag className="w-16 h-16 text-slate-200 mx-auto mb-6" />
+                            <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Henüz kampanya bulunmuyor.</p>
+                          </div>
+                        ) : (
+                          coupons.map((coupon, idx) => (
+                            <motion.div
+                              key={coupon.id}
+                              initial={{ opacity: 0, scale: 0.9 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: idx * 0.1 }}
+                              className="group relative"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-[2.5rem] blur-2xl opacity-0 group-hover:opacity-10 transition-opacity" />
+                              <div className="relative bg-white p-6 md:p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col h-full overflow-hidden">
+                                <div className="flex justify-between items-start mb-8">
+                                  <div className={`px-4 py-1.5 rounded-full text-[9px] font-black tracking-[0.2em] border ${coupon.isActive ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-slate-50 text-slate-400 border-slate-100'}`}>
+                                    {coupon.isActive ? 'AKTİF' : 'PASİF'}
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => openEditModal(coupon)}
+                                      className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                      title="Kampanyayı Düzenle"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => deleteCoupon(coupon.id)}
+                                      className="p-3 bg-rose-50 text-rose-500 rounded-2xl hover:bg-rose-500 hover:text-white transition-all shadow-sm"
+                                      title="Kampanyayı Sil"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                </div>
+
+                                <div className="mb-6">
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span className="text-3xl font-black text-indigo-600">%{coupon.discountPercentage}</span>
+                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">İNDİRİM</span>
+                                  </div>
+                                  <h3 className="text-xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
+                                    {coupon.title}
+                                  </h3>
+                                </div>
+
+                                <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-1">
+                                  {coupon.description}
+                                </p>
+
+                                <div className="mt-auto pt-8 border-t border-slate-100">
+                                  <div className="flex justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                                    <span>KULLANIM ORANI</span>
+                                    <span className="text-slate-900">{coupon.used_count || 0} / {coupon.total_limit || '∞'}</span>
+                                  </div>
+                                  <div className="w-full h-2.5 bg-slate-50 rounded-full overflow-hidden p-0.5 border border-slate-100">
+                                    <motion.div
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${Math.min(((coupon.used_count || 0) / (coupon.total_limit || 1)) * 100, 100)}%` }}
+                                      transition={{ duration: 1, delay: 0.5 }}
+                                      className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full"
+                                    />
+                                  </div>
+                                  {coupon.expiry_date && (
+                                    <p className="mt-4 text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                      <Clock className="w-3 h-3" /> SON GÜN: {coupon.expiry_date.toDate().toLocaleDateString('tr-TR')}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </motion.div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ADD COUPON MODAL */}
+                    <AnimatePresence>
+                      {showAddCouponModal && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            onClick={() => setShowAddCouponModal(false)}
+                            className="absolute inset-0 bg-slate-950/40 backdrop-blur-md"
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="relative w-full max-w-xl bg-white rounded-[2rem] md:rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden flex flex-col max-h-[85vh] md:max-h-[90vh] border border-white"
+                          >
+                            {/* Modal Header */}
+                            <div className="p-6 md:p-10 border-b border-slate-50 flex justify-between items-center bg-white/50 backdrop-blur-sm shrink-0">
+                              <div>
+                                <h3 className="text-xl md:text-3xl font-black text-slate-900 tracking-tight">
+                                  {editingCouponId ? 'Kampanyayı Düzenle' : 'Yeni Kampanya'}
+                                </h3>
+                                <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">
+                                  {editingCouponId ? 'KAMPANYA BİLGİLERİNİ GÜNCELLE' : 'SİSTEME KAMPANYA TANIMLA'}
+                                </p>
+                              </div>
+                              <button
+                                onClick={() => setShowAddCouponModal(false)}
+                                className="p-2 md:p-4 hover:bg-slate-100 rounded-2xl md:rounded-3xl transition-all group"
+                              >
+                                <X className="w-5 h-5 md:w-6 md:h-6 text-slate-400 group-hover:rotate-90 transition-transform duration-300" />
+                              </button>
+                            </div>
+
+                            {/* Modal Scrollable Content */}
+                            <div className="p-6 md:p-10 overflow-y-auto flex-1 space-y-8 no-scrollbar">
+                              <form id="add-coupon-form" onSubmit={handleAddCoupon} className="space-y-8 md:space-y-10">
+                                <div className="space-y-3">
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kampanya Başlığı</label>
+                                  <div className="relative group">
+                                    <input
+                                      type="text"
+                                      required
+                                      value={newCoupon.title}
+                                      onChange={e => setNewCoupon({ ...newCoupon, title: e.target.value })}
+                                      placeholder="Örn: Hafta Sonu Özel İndirimi"
+                                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
+                                    />
+                                    <Tag className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+                                  <div className="space-y-3">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">İndirim Oranı (%)</label>
+                                    <div className="relative group">
+                                      <input
+                                        type="number"
+                                        required
+                                        min="1"
+                                        max="100"
+                                        value={newCoupon.discountPercentage}
+                                        onChange={e => setNewCoupon({ ...newCoupon, discountPercentage: e.target.value })}
+                                        placeholder="20"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
+                                      />
+                                      <Percent className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-3">
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kupon Sayısı (Limit)</label>
+                                    <div className="relative group">
+                                      <input
+                                        type="number"
+                                        value={newCoupon.totalLimit}
+                                        onChange={e => setNewCoupon({ ...newCoupon, totalLimit: e.target.value })}
+                                        placeholder="Sınırsız için boş bırakın"
+                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
+                                      />
+                                      <Hash className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Son Geçerlilik Tarihi</label>
+                                  <div className="relative group">
+                                    <input
+                                      type="date"
+                                      value={newCoupon.expiryDate}
+                                      onChange={e => setNewCoupon({ ...newCoupon, expiryDate: e.target.value })}
+                                      className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base cursor-pointer"
+                                    />
+                                    <Calendar className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
+                                  </div>
+                                </div>
+
+                                <div className="space-y-3">
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kampanya Detayları</label>
+                                  <textarea
+                                    value={newCoupon.description}
+                                    onChange={e => setNewCoupon({ ...newCoupon, description: e.target.value })}
+                                    placeholder="Kampanya şartlarını ve detaylarını buraya yazın..."
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 min-h-[140px] md:min-h-[160px] resize-none text-sm md:text-base placeholder:text-slate-300"
+                                  />
+                                </div>
+                              </form>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div className="p-6 md:p-10 border-t border-slate-50 bg-slate-50/30 backdrop-blur-sm shrink-0">
+                              <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                form="add-coupon-form"
+                                type="submit"
+                                disabled={isAddingCoupon}
+                                className="w-full bg-slate-900 text-white py-5 md:py-6 rounded-2xl md:rounded-[2rem] font-black text-lg md:text-xl shadow-2xl shadow-slate-900/20 disabled:opacity-50 flex items-center justify-center gap-4 group transition-all"
+                              >
+                                {isAddingCoupon ? (
+                                  <RefreshCw className="w-6 h-6 md:w-8 md:h-8 animate-spin" />
+                                ) : (
+                                  <>
+                                    {editingCouponId ? 'DEĞİŞİKLİKLERİ KAYDET' : 'KAMPANYAYI BAŞLAT'} 
+                                    <Zap className="w-5 h-5 md:w-6 md:h-6 group-hover:text-amber-400 group-hover:scale-125 transition-all" />
+                                  </>
+                                )}
+                              </motion.button>
+                            </div>
+                          </motion.div>
+                        </div>
+                      )}
+                    </AnimatePresence>
+                  </>
                 )}
 
                 {activeTab === 'reviews' && (
