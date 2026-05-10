@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import {
   Smartphone, ShieldCheck, MapPin,
   ArrowRight, Code, Ticket,
@@ -8,14 +8,13 @@ import {
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useState, useRef, useEffect } from 'react';
-import ShaderBackground from '../components/ui/shader-background';
 
-const fadeInUp = {
+const fadeInUp: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -71,8 +70,6 @@ const LandingPage = () => {
         <html lang="tr" />
         <title>Seydişehir Rehberi - Modern Şehir Asistanınız</title>
       </Helmet>
-
-      <ShaderBackground />
 
       {/* Decorative Backgrounds */}
       <div className="absolute top-[-20%] left-[-10%] w-[70vw] h-[70vw] rounded-full bg-gradient-to-br from-emerald-100/40 via-teal-50/20 to-transparent blur-[100px] -z-10 pointer-events-none" />
