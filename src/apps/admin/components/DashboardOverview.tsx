@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
 import { collection, query, onSnapshot, where } from 'firebase/firestore';
-import { Users, Activity, Award, Clock, MapPin, Bus, Tag, MessageSquare, ShieldCheck, Image, Store, CheckCircle2, Gavel } from 'lucide-react';
+import { Users, Activity, Award, Clock, MapPin, Bus, Tag, MessageSquare, ShieldCheck, Image, Store, CheckCircle2, Gavel, MessagesSquare, Flag } from 'lucide-react';
 
 interface DashboardOverviewProps {
   permissions: Record<string, boolean>;
@@ -21,7 +21,9 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
     firma_reviews: 0,
     esnaf_users: 0,
     coupons: 0,
-    bekleyen_sikayetler: 0
+    bekleyen_sikayetler: 0,
+    forum_gizli_gonderi: 0,
+    forum_gizli_yanit: 0,
   });
 
   useEffect(() => {
@@ -78,12 +80,27 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
       });
     }
 
+    let unsubscribeForumPosts = () => {};
+    let unsubscribeForumReplies = () => {};
+    if (permissions['canManageForum']) {
+      const qFP = query(collection(db, 'forum_posts'), where('is_hidden', '==', true));
+      unsubscribeForumPosts = onSnapshot(qFP, (snap) => {
+        setStats(prev => ({ ...prev, forum_gizli_gonderi: snap.size }));
+      });
+      const qFR = query(collection(db, 'forum_replies'), where('is_hidden', '==', true));
+      unsubscribeForumReplies = onSnapshot(qFR, (snap) => {
+        setStats(prev => ({ ...prev, forum_gizli_yanit: snap.size }));
+      });
+    }
+
     return () => {
       unsubscribes.forEach(unsub => unsub());
       unsubscribeSupport();
       unsubscribeUsed();
       unsubscribeReports();
       unsubscribeFirmaReviews();
+      unsubscribeForumPosts();
+      unsubscribeForumReplies();
     };
   }, [permissions]);
 
@@ -109,6 +126,8 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
         {permissions['canManageReports'] && <StatCard icon={ShieldCheck} label="Bekleyen Şikayet" value={stats.bekleyen_sikayetler} max={10} color="#f43f5e" />}
         {permissions['canManageEsnaf'] && <StatCard icon={Users} label="Esnaf Hesapları" value={stats.esnaf_users} max={100} color="#06b6d4" />}
         {permissions['canManageBanners'] && <StatCard icon={Image} label="Bannerler" value={stats.banners} max={10} color="#db2777" />}
+        {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Gizli Forum Gönderi" value={stats.forum_gizli_gonderi} max={20} color="#a855f7" />}
+        {permissions['canManageForum'] && <StatCard icon={Flag} label="Gizli Forum Yanıt" value={stats.forum_gizli_yanit} max={20} color="#ec4899" />}
       </div>
 
       <div className="card mt-10 border-l-4 border-l-indigo-500 bg-indigo-500/5">

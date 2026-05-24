@@ -5,6 +5,7 @@ import DashboardOverview from './components/DashboardOverview';
 import ManageCollection from './components/ManageCollection';
 import NotificationManagement from './components/NotificationManagement';
 import SupportNotificationWatcher from './components/SupportNotificationWatcher';
+import ForumModeration from './components/ForumModeration';
 import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
@@ -51,6 +52,8 @@ function AdminApp() {
         canManageEsnaf: true,
         canManageCoupons: true,
         canManageAdmins: true,
+        canManageSurveys: true,
+        canManageForum: true,
       };
     } else {
       try {
@@ -73,6 +76,8 @@ function AdminApp() {
             canManageEsnaf: data.canManageEsnaf || false,
             canManageCoupons: data.canManageCoupons || false,
             canManageAdmins: data.canManageAdmins || false,
+            canManageSurveys: data.canManageSurveys || false,
+            canManageForum: data.canManageForum || false,
           };
         }
       } catch (err) {
@@ -214,7 +219,8 @@ function AdminApp() {
         <SupportNotificationWatcher />
         <div className="max-w-7xl mx-auto">
           {activeTab === 'dashboard' ? <DashboardOverview permissions={permissions} /> : 
-           activeTab === 'notifications' ? <NotificationManagement /> : 
+           activeTab === 'notifications' ? <NotificationManagement /> :
+           activeTab === 'forum_moderation' ? <ForumModeration /> :
            <ManageCollection 
               key={activeTab} 
               collectionId={activeTab} 

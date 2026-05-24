@@ -199,9 +199,9 @@ const Policies = () => {
                           <ShieldAlert size={24} />
                         </div>
                         <div>
-                          <h4 className="font-black text-slate-900 text-lg mb-2">UGC (Kullanıcı İçeriği)</h4>
+                          <h4 className="font-black text-slate-900 text-lg mb-2">UGC (Kullanıcı İçeriği) ve Otomatik Filtre</h4>
                           <p className="text-slate-500 font-medium leading-relaxed">
-                            Küfür, hakaret, nefret söylemi kesinlikle yasaktır. Bu tür içerikler tespit edildiğinde veya raporlandığında <span className="text-rose-600 font-bold">24 saat içinde</span> moderasyonla kalıcı olarak silinir.
+                            Sistemimizde bulunan <span className="text-rose-600 font-bold">akıllı küfür ve argo filtresi</span>, uygunsuz kelimeleri otomatik olarak engeller. Buna rağmen gözden kaçan küfür, hakaret ve nefret söylemi kesinlikle yasaktır ve raporlandığında 24 saat içinde moderasyonla kalıcı olarak silinir.
                           </p>
                         </div>
                       </div>
@@ -213,7 +213,19 @@ const Policies = () => {
                         <div>
                           <h4 className="font-black text-slate-900 text-lg mb-2">Raporlama ve Engelleme</h4>
                           <p className="text-slate-500 font-medium leading-relaxed">
-                            Kullanıcıların birbirini engelleme ve uygunsuz içeriği anında rapor etme sistemi mevcuttur. Raporlar moderasyon ekibimizce titizlikle incelenir.
+                            Kullanıcıların birbirini engelleme (sonrasında Ayarlar'dan kaldırabilme) ve uygunsuz içeriği anında rapor etme sistemi mevcuttur. Raporlar moderasyon ekibimizce titizlikle incelenir.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-5">
+                        <div className="flex-shrink-0 w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center">
+                          <UserCheck size={24} />
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-900 text-lg mb-2">Ziyaretçi (Anonim) Kullanımı</h4>
+                          <p className="text-slate-500 font-medium leading-relaxed">
+                            Misafir kullanıcılar forumdaki ana gönderileri okuyabilir ancak diğer kullanıcıların verdiği yanıtları görebilmek veya yanıt yazabilmek için kayıt olmaları / giriş yapmaları zorunludur.
                           </p>
                         </div>
                       </div>
@@ -279,7 +291,7 @@ const Policies = () => {
               {/* Footer info */}
               <footer className="text-center pt-8 border-t border-slate-200">
                 <p className="text-slate-400 text-sm font-bold">
-                  Son Güncelleme: 21 Nisan 2026 • SeydiRehber
+                  Son Güncelleme: 24 Mayıs 2026 • SeydiRehber
                 </p>
               </footer>
             </div>

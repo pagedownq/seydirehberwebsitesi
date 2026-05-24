@@ -14,7 +14,9 @@ import {
   TicketPercent, 
   BellRing, 
   ShieldCheck,
-  Users
+  Users,
+  ClipboardList,
+  MessagesSquare
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -41,6 +43,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, permissions,
     { id: 'esnaf_users', label: 'Esnaf Hesapları', icon: UserCog, perm: 'canManageEsnaf' },
     { id: 'coupons', label: 'Kupon Yönetimi', icon: TicketPercent, perm: 'canManageCoupons' },
     { id: 'notifications', label: 'Bildirim Yönetimi', icon: BellRing, perm: 'canManageNotifications' },
+    { id: 'surveys', label: 'Anket Yönetimi', icon: ClipboardList, perm: 'canManageSurveys' },
+    { id: 'forum_moderation', label: 'Forum Moderasyonu', icon: MessagesSquare, perm: 'canManageForum' },
     { id: 'admins', label: 'Admin Yönetimi', icon: ShieldCheck, perm: 'canManageAdmins' },
   ];
 

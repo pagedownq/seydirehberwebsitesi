@@ -182,6 +182,17 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
       { key: 'canManageEsnaf', label: 'Esnaf Yönetimi', isBoolean: true },
       { key: 'canManageCoupons', label: 'Kupon Yönetimi', isBoolean: true },
       { key: 'canManageAdmins', label: 'Admin Yönetimi', isBoolean: true },
+      { key: 'canManageSurveys', label: 'Anket Yönetimi', isBoolean: true },
+    ]
+  },
+  surveys: {
+    title: 'Anket Yönetimi',
+    bucket: null,
+    fields: [
+      { key: 'title', label: 'Anket Başlığı', required: true },
+      { key: 'url', label: 'Anket Linki (Google Form vb.)', required: true },
+      { key: 'isActive', label: 'Aktif Mi?', isBoolean: true },
+      { key: 'description', label: 'Açıklama (Opsiyonel)', multiline: true },
     ]
   },
   sikayetler: {

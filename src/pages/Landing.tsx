@@ -454,6 +454,7 @@ const LandingPage = () => {
                 <li><a href="#features" className="text-slate-500 font-medium hover:text-emerald-600 transition-colors">Özellikler</a></li>
                 <li><a href="#stats" className="text-slate-500 font-medium hover:text-emerald-600 transition-colors">İstatistikler</a></li>
                 <li><Link to="/about" className="text-slate-500 font-medium hover:text-emerald-600 transition-colors">Hakkımızda</Link></li>
+                <li><Link to="/politikalar" className="text-slate-500 font-medium hover:text-emerald-600 transition-colors">Gizlilik & Politikalar</Link></li>
               </ul>
             </div>
 
