@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
-import { collection, query, onSnapshot, where } from 'firebase/firestore';
-import { Users, Activity, Award, Clock, MapPin, Bus, Tag, MessageSquare, ShieldCheck, Image, Store, CheckCircle2, Gavel, MessagesSquare, Flag } from 'lucide-react';
+import { collection, query, getCountFromServer, where } from 'firebase/firestore';
+import { Users, Activity, Award, Clock, MapPin, Bus, Tag, MessageSquare, ShieldCheck, Image, Store, CheckCircle2, Gavel, MessagesSquare } from 'lucide-react';
 
 interface DashboardOverviewProps {
   permissions: Record<string, boolean>;
 }
 
 const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     firmalar: 0,
     etkinlikler: 0,
@@ -21,114 +22,168 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
     firma_reviews: 0,
     esnaf_users: 0,
     coupons: 0,
+    used_coupons: 0,
     bekleyen_sikayetler: 0,
+    forum_gonderi: 0,
     forum_gizli_gonderi: 0,
-    forum_gizli_yanit: 0,
   });
 
-  useEffect(() => {
-    // Only fetch counts for allowed collections
-    const collectionsToCount = [
-      { key: 'firmalar', perm: 'canManageCompanies' },
-      { key: 'etkinlikler', perm: 'canManageEvents' },
-      { key: 'gezilecek_yerler', perm: 'canManagePlaces' },
-      { key: 'noterler', perm: 'canManageNotaries' },
-      { key: 'pazarlar', perm: 'canManageMarkets' },
-      { key: 'otobus_saatleri', perm: 'canManageBuses' },
-      { key: 'banners', perm: 'canManageBanners' },
-      { key: 'reviews', perm: 'canManageReviews' },
-      { key: 'esnaf_users', perm: 'canManageEsnaf' },
-      { key: 'coupons', perm: 'canManageCoupons' }
-    ].filter(col => permissions[col.perm]);
+  const fetchStats = async () => {
+    setLoading(true);
+    try {
+      const newStats = { ...stats };
 
-    const unsubscribes = collectionsToCount.map(col => {
-      return onSnapshot(collection(db, col.key), (snap) => {
-        setStats(prev => ({ ...prev, [col.key]: snap.size }));
+      // 1. İzin verilen standart koleksiyonları sayalım
+      const collectionsToCount = [
+        { key: 'firmalar', perm: 'canManageCompanies' },
+        { key: 'etkinlikler', perm: 'canManageEvents' },
+        { key: 'gezilecek_yerler', perm: 'canManagePlaces' },
+        { key: 'noterler', perm: 'canManageNotaries' },
+        { key: 'pazarlar', perm: 'canManageMarkets' },
+        { key: 'otobus_saatleri', perm: 'canManageBuses' },
+        { key: 'banners', perm: 'canManageBanners' },
+        { key: 'reviews', perm: 'canManageReviews' },
+        { key: 'esnaf_users', perm: 'canManageEsnaf' },
+        { key: 'coupons', perm: 'canManageCoupons' }
+      ];
+
+      // Paralel çalıştırmak için tüm sayım isteklerini Promise.all ile başlatıyoruz (Performans için)
+      const countPromises = collectionsToCount.map(async (col) => {
+        if (permissions[col.perm]) {
+          try {
+            const collRef = collection(db, col.key);
+            const snap = await getCountFromServer(collRef);
+            return { key: col.key, count: snap.data().count };
+          } catch (e) {
+            console.error(`Error counting ${col.key}:`, e);
+            return { key: col.key, count: 0 };
+          }
+        }
+        return { key: col.key, count: 0 };
       });
-    });
 
-    let unsubscribeSupport = () => {};
-    if (permissions['canManageSupport']) {
-      const qSupport = query(collection(db, 'yardim_destek'), where('durum', '==', 'Bekliyor'));
-      unsubscribeSupport = onSnapshot(qSupport, (snap) => {
-        setStats(prev => ({ ...prev, destek_bekleyen: snap.size }));
-      });
-    }
-
-    let unsubscribeUsed = () => {};
-    if (permissions['canManageCoupons']) {
-      const qUsed = query(collection(db, 'generated_codes'), where('status', '==', 'used'));
-      unsubscribeUsed = onSnapshot(qUsed, (snap) => {
+      const results = await Promise.all(countPromises);
+      results.forEach(res => {
         // @ts-ignore
-        setStats(prev => ({ ...prev, used_coupons: snap.size }));
+        newStats[res.key] = res.count;
       });
-    }
 
-    let unsubscribeReports = () => {};
-    if (permissions['canManageReports']) {
-      const qReports = query(collection(db, 'sikayetler'), where('status', '==', 'pending'));
-      unsubscribeReports = onSnapshot(qReports, (snap) => {
-        setStats(prev => ({ ...prev, bekleyen_sikayetler: snap.size }));
-      });
-    }
+      // 2. Filtreli Özel Sorgular
 
-    let unsubscribeFirmaReviews = () => {};
-    if (permissions['canManageReviews']) {
-      const qFirma = query(collection(db, 'reviews'), where('targetType', '==', 'company'));
-      unsubscribeFirmaReviews = onSnapshot(qFirma, (snap) => {
-        setStats(prev => ({ ...prev, firma_reviews: snap.size }));
-      });
-    }
+      // Bekleyen Destek
+      if (permissions['canManageSupport']) {
+        try {
+          const q = query(collection(db, 'yardim_destek'), where('durum', '==', 'Bekliyor'));
+          const snap = await getCountFromServer(q);
+          newStats.destek_bekleyen = snap.data().count;
+        } catch (e) {
+          console.error("Error counting destek_bekleyen:", e);
+        }
+      }
 
-    let unsubscribeForumPosts = () => {};
-    let unsubscribeForumReplies = () => {};
-    if (permissions['canManageForum']) {
-      const qFP = query(collection(db, 'forum_posts'), where('is_hidden', '==', true));
-      unsubscribeForumPosts = onSnapshot(qFP, (snap) => {
-        setStats(prev => ({ ...prev, forum_gizli_gonderi: snap.size }));
-      });
-      const qFR = query(collection(db, 'forum_replies'), where('is_hidden', '==', true));
-      unsubscribeForumReplies = onSnapshot(qFR, (snap) => {
-        setStats(prev => ({ ...prev, forum_gizli_yanit: snap.size }));
-      });
-    }
+      // Kullanılan Kuponlar
+      if (permissions['canManageCoupons']) {
+        try {
+          const q = query(collection(db, 'generated_codes'), where('status', '==', 'used'));
+          const snap = await getCountFromServer(q);
+          newStats.used_coupons = snap.data().count;
+        } catch (e) {
+          console.error("Error counting used_coupons:", e);
+        }
+      }
 
-    return () => {
-      unsubscribes.forEach(unsub => unsub());
-      unsubscribeSupport();
-      unsubscribeUsed();
-      unsubscribeReports();
-      unsubscribeFirmaReviews();
-      unsubscribeForumPosts();
-      unsubscribeForumReplies();
-    };
+      // Bekleyen Şikayetler
+      if (permissions['canManageReports']) {
+        try {
+          const q = query(collection(db, 'sikayetler'), where('status', '==', 'pending'));
+          const snap = await getCountFromServer(q);
+          newStats.bekleyen_sikayetler = snap.data().count;
+        } catch (e) {
+          console.error("Error counting bekleyen_sikayetler:", e);
+        }
+      }
+
+      // Firma Yorumları
+      if (permissions['canManageReviews']) {
+        try {
+          const q = query(collection(db, 'reviews'), where('targetType', '==', 'company'));
+          const snap = await getCountFromServer(q);
+          newStats.firma_reviews = snap.data().count;
+        } catch (e) {
+          console.error("Error counting firma_reviews:", e);
+        }
+      }
+
+      // Forum Gönderileri
+      if (permissions['canManageForum']) {
+        try {
+          const qTotal = collection(db, 'forum_posts');
+          const qHidden = query(collection(db, 'forum_posts'), where('is_hidden', '==', true));
+          
+          const [snapTotal, snapHidden] = await Promise.all([
+            getCountFromServer(qTotal),
+            getCountFromServer(qHidden)
+          ]);
+
+          newStats.forum_gonderi = snapTotal.data().count;
+          newStats.forum_gizli_gonderi = snapHidden.data().count;
+        } catch (e) {
+          console.error("Error counting forum posts:", e);
+        }
+      }
+
+      setStats(newStats);
+    } catch (error) {
+      console.error("İstatistikler yüklenirken genel hata oluştu:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
   }, [permissions]);
 
   return (
     <div className="dashboard-overview animate-in fade-in duration-500">
-      <div className="header mb-10">
-        <h1 className="text-3xl font-black tracking-tight text-white">Yönetim Özeti</h1>
-        <p className="text-slate-400 font-medium">Sistemdeki güncel istatistikler ve genel durum.</p>
+      <div className="header mb-10 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight text-white">Yönetim Özeti</h1>
+          <p className="text-slate-400 font-medium">Sistemdeki güncel istatistikler ve genel durum.</p>
+        </div>
+        <button 
+          onClick={fetchStats} 
+          disabled={loading}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white font-semibold rounded-xl text-sm transition-all shadow-lg active:scale-95 flex items-center gap-2"
+        >
+          {loading ? 'Güncelleniyor...' : 'Verileri Yenile'}
+        </button>
       </div>
 
-      <div className="grid">
-        {permissions['canManageCompanies'] && <StatCard icon={Award} label="Kayıtlı Firma" value={stats.firmalar} max={500} color="#6366f1" />}
-        {permissions['canManageEvents'] && <StatCard icon={Activity} label="Aktif Etkinlik" value={stats.etkinlikler} max={50} color="#ec4899" />}
-        {permissions['canManagePlaces'] && <StatCard icon={MapPin} label="Gezilecek Yer" value={stats.gezilecek_yerler} max={100} color="#a855f7" />}
-        {permissions['canManageSupport'] && <StatCard icon={Clock} label="Bekleyen Destek" value={stats.destek_bekleyen} max={20} color="#f59e0b" />}
-        {permissions['canManageNotaries'] && <StatCard icon={Gavel} label="Noterler" value={stats.noterler} max={30} color="#ef4444" />}
-        {permissions['canManageMarkets'] && <StatCard icon={Store} label="Pazarlar" value={stats.pazarlar} max={10} color="#10b981" />}
-        {permissions['canManageBuses'] && <StatCard icon={Bus} label="Otobüs Saatleri" value={stats.otobus_saatleri} max={200} color="#0ea5e9" />}
-        {permissions['canManageCoupons'] && <StatCard icon={Tag} label="Kupon Sayısı" value={stats.coupons} max={1000} color="#f97316" />}
-        {permissions['canManageCoupons'] && <StatCard icon={CheckCircle2} label="Kullanılan Kuponlar" value={(stats as any).used_coupons || 0} max={stats.coupons || 100} color="#22c55e" />}
-        {permissions['canManageReviews'] && <StatCard icon={MessageSquare} label="Yorumlar" value={stats.reviews} max={1000} color="#8b5cf6" />}
-        {permissions['canManageReviews'] && <StatCard icon={Store} label="Firma Yorumları" value={stats.firma_reviews} max={1000} color="#6366f1" />}
-        {permissions['canManageReports'] && <StatCard icon={ShieldCheck} label="Bekleyen Şikayet" value={stats.bekleyen_sikayetler} max={10} color="#f43f5e" />}
-        {permissions['canManageEsnaf'] && <StatCard icon={Users} label="Esnaf Hesapları" value={stats.esnaf_users} max={100} color="#06b6d4" />}
-        {permissions['canManageBanners'] && <StatCard icon={Image} label="Bannerler" value={stats.banners} max={10} color="#db2777" />}
-        {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Gizli Forum Gönderi" value={stats.forum_gizli_gonderi} max={20} color="#a855f7" />}
-        {permissions['canManageForum'] && <StatCard icon={Flag} label="Gizli Forum Yanıt" value={stats.forum_gizli_yanit} max={20} color="#ec4899" />}
-      </div>
+      {loading && stats.firmalar === 0 ? (
+        <div className="text-center py-20 text-slate-400 font-medium animate-pulse">
+          İstatistikler yükleniyor, lütfen bekleyin...
+        </div>
+      ) : (
+        <div className="grid">
+          {permissions['canManageCompanies'] && <StatCard icon={Award} label="Kayıtlı Firma" value={stats.firmalar} max={500} color="#6366f1" />}
+          {permissions['canManageEvents'] && <StatCard icon={Activity} label="Aktif Etkinlik" value={stats.etkinlikler} max={50} color="#ec4899" />}
+          {permissions['canManagePlaces'] && <StatCard icon={MapPin} label="Gezilecek Yer" value={stats.gezilecek_yerler} max={100} color="#a855f7" />}
+          {permissions['canManageSupport'] && <StatCard icon={Clock} label="Bekleyen Destek" value={stats.destek_bekleyen} max={20} color="#f59e0b" />}
+          {permissions['canManageNotaries'] && <StatCard icon={Gavel} label="Noterler" value={stats.noterler} max={30} color="#ef4444" />}
+          {permissions['canManageMarkets'] && <StatCard icon={Store} label="Pazarlar" value={stats.pazarlar} max={10} color="#10b981" />}
+          {permissions['canManageBuses'] && <StatCard icon={Bus} label="Otobüs Saatleri" value={stats.otobus_saatleri} max={200} color="#0ea5e9" />}
+          {permissions['canManageCoupons'] && <StatCard icon={Tag} label="Kupon Sayısı" value={stats.coupons} max={1000} color="#f97316" />}
+          {permissions['canManageCoupons'] && <StatCard icon={CheckCircle2} label="Kullanılan Kuponlar" value={stats.used_coupons} max={stats.coupons || 100} color="#22c55e" />}
+          {permissions['canManageReviews'] && <StatCard icon={MessageSquare} label="Yorumlar" value={stats.reviews} max={1000} color="#8b5cf6" />}
+          {permissions['canManageReviews'] && <StatCard icon={Store} label="Firma Yorumları" value={stats.firma_reviews} max={1000} color="#6366f1" />}
+          {permissions['canManageReports'] && <StatCard icon={ShieldCheck} label="Bekleyen Şikayet" value={stats.bekleyen_sikayetler} max={10} color="#f43f5e" />}
+          {permissions['canManageEsnaf'] && <StatCard icon={Users} label="Esnaf Hesapları" value={stats.esnaf_users} max={100} color="#06b6d4" />}
+          {permissions['canManageBanners'] && <StatCard icon={Image} label="Bannerler" value={stats.banners} max={10} color="#db2777" />}
+          {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Toplam Forum Gönderisi" value={stats.forum_gonderi} max={500} color="#6366f1" />}
+          {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Gizlenen Forum Gönderisi" value={stats.forum_gizli_gonderi} max={50} color="#a855f7" />}
+        </div>
+      )}
 
       <div className="card mt-10 border-l-4 border-l-indigo-500 bg-indigo-500/5">
         <h3 className="text-lg font-bold text-white mb-2">Hızlı Durum</h3>
