@@ -481,8 +481,15 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                 </div>
               )}
 
-              {config.fields.filter(f => !f.key.startsWith('canManage')).map(field => (
-                <div className="form-group" key={field.key}>
+              {config.fields.filter(f => !f.key.startsWith('canManage')).map(field => {
+                if (collectionId === 'coupons') {
+                  const isInfo = !!formData.isInformational;
+                  if (isInfo && (field.key === 'discountPercentage' || field.key === 'total_limit')) {
+                    return null;
+                  }
+                }
+                return (
+                  <div className="form-group" key={field.key}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
                     <label className="label" style={{ marginBottom: 0 }}>{field.label}</label>
                     {field.key === 'expiry_date' && (
@@ -684,6 +691,15 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                       value={formData[field.key] || ''}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                     />
+                  ) : field.key === 'isInformational' ? (
+                    <select 
+                      className="input"
+                      value={formData[field.key] ? 'true' : 'false'}
+                      onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value === 'true' })}
+                    >
+                      <option value="false">İndirim Kuponu</option>
+                      <option value="true">Bilgilendirme Kuponu</option>
+                    </select>
                   ) : field.isBoolean ? (
                     <div>
                       <label className="switch">
@@ -711,7 +727,8 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                     />
                   )}
                 </div>
-              ))}
+              );
+              })}
 
               {/* Special Handling for Permissions in Admin Management */}
               {collectionId === 'admins' && config.fields.some(f => f.key.startsWith('canManage')) && (

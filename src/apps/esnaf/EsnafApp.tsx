@@ -90,7 +90,8 @@ function EsnafApp() {
     description: "",
     discountPercentage: "",
     expiryDate: "",
-    totalLimit: ""
+    totalLimit: "",
+    isInformational: false
   });
   const galleryRef = React.useRef<HTMLDivElement>(null);
 
@@ -452,11 +453,12 @@ function EsnafApp() {
       const couponData = {
         title: newCoupon.title,
         description: newCoupon.description,
-        discountPercentage: Number(newCoupon.discountPercentage) || 0,
+        discountPercentage: newCoupon.isInformational ? 0 : (Number(newCoupon.discountPercentage) || 0),
         companyId: companyId,
         companyName: companyName,
         expiry_date: newCoupon.expiryDate ? Timestamp.fromDate(new Date(newCoupon.expiryDate)) : null,
-        total_limit: newCoupon.totalLimit ? Number(newCoupon.totalLimit) : null,
+        total_limit: newCoupon.isInformational ? null : (newCoupon.totalLimit ? Number(newCoupon.totalLimit) : null),
+        isInformational: !!newCoupon.isInformational,
         isActive: true,
         used_count: editingCouponId ? undefined : 0, // Don't reset count on edit
         created_at: editingCouponId ? undefined : Timestamp.now()
@@ -478,7 +480,8 @@ function EsnafApp() {
         description: "",
         discountPercentage: "",
         expiryDate: "",
-        totalLimit: ""
+        totalLimit: "",
+        isInformational: false
       });
     } catch (err) {
       console.error("Add/Update coupon error:", err);
@@ -493,9 +496,10 @@ function EsnafApp() {
     setNewCoupon({
       title: coupon.title,
       description: coupon.description,
-      discountPercentage: String(coupon.discountPercentage),
+      discountPercentage: String(coupon.discountPercentage || ""),
       expiryDate: coupon.expiry_date ? coupon.expiry_date.toDate().toISOString().split('T')[0] : "",
-      totalLimit: coupon.total_limit ? String(coupon.total_limit) : ""
+      totalLimit: coupon.total_limit ? String(coupon.total_limit) : "",
+      isInformational: coupon.isInformational || false
     });
     setShowAddCouponModal(true);
   };
@@ -915,7 +919,8 @@ function EsnafApp() {
                               description: "",
                               discountPercentage: "",
                               expiryDate: "",
-                              totalLimit: ""
+                              totalLimit: "",
+                              isInformational: false
                             });
                             setShowAddCouponModal(true);
                           }}
@@ -966,15 +971,23 @@ function EsnafApp() {
 
                                 <div className="mb-6">
                                   <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-3xl font-black text-indigo-600">%{coupon.discountPercentage}</span>
-                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">İNDİRİM</span>
+                                    {coupon.discountPercentage > 0 ? (
+                                      <>
+                                        <span className="text-3xl font-black text-indigo-600">%{coupon.discountPercentage}</span>
+                                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">İNDİRİM</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="text-xl font-black text-indigo-600">ÖZEL FIRSAT</span>
+                                      </>
+                                    )}
                                   </div>
                                   <h3 className="text-xl font-black text-slate-900 leading-tight group-hover:text-indigo-600 transition-colors">
                                     {coupon.title}
                                   </h3>
                                 </div>
 
-                                <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-1">
+                                <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8 flex-1 line-clamp-4" title={coupon.description}>
                                   {coupon.description}
                                 </p>
 
@@ -1056,38 +1069,51 @@ function EsnafApp() {
                                     <Tag className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
                                   </div>
                                 </div>
-
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
-                                  <div className="space-y-3">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">İndirim Oranı (%)</label>
-                                    <div className="relative group">
-                                      <input
-                                        type="number"
-                                        required
-                                        min="1"
-                                        max="100"
-                                        value={newCoupon.discountPercentage}
-                                        onChange={e => setNewCoupon({ ...newCoupon, discountPercentage: e.target.value })}
-                                        placeholder="20"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
-                                      />
-                                      <Percent className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                    </div>
-                                  </div>
-                                  <div className="space-y-3">
-                                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kupon Sayısı (Limit)</label>
-                                    <div className="relative group">
-                                      <input
-                                        type="number"
-                                        value={newCoupon.totalLimit}
-                                        onChange={e => setNewCoupon({ ...newCoupon, totalLimit: e.target.value })}
-                                        placeholder="Sınırsız için boş bırakın"
-                                        className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
-                                      />
-                                      <Hash className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
-                                    </div>
-                                  </div>
+                                <div className="space-y-3">
+                                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kupon Türü</label>
+                                  <select
+                                    value={newCoupon.isInformational ? 'true' : 'false'}
+                                    onChange={e => setNewCoupon({ ...newCoupon, isInformational: e.target.value === 'true' })}
+                                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base"
+                                  >
+                                    <option value="false">İndirim Kuponu</option>
+                                    <option value="true">Bilgilendirme Kuponu</option>
+                                  </select>
                                 </div>
+
+                                {!newCoupon.isInformational && (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+                                    <div className="space-y-3">
+                                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">İndirim Oranı (%)</label>
+                                      <div className="relative group">
+                                        <input
+                                          type="number"
+                                          required={!newCoupon.isInformational}
+                                          min="1"
+                                          max="100"
+                                          value={newCoupon.discountPercentage}
+                                          onChange={e => setNewCoupon({ ...newCoupon, discountPercentage: e.target.value })}
+                                          placeholder="20"
+                                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
+                                        />
+                                        <Percent className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-3">
+                                      <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Kupon Sayısı (Limit)</label>
+                                      <div className="relative group">
+                                        <input
+                                          type="number"
+                                          value={newCoupon.totalLimit}
+                                          onChange={e => setNewCoupon({ ...newCoupon, totalLimit: e.target.value })}
+                                          placeholder="Sınırsız için boş bırakın"
+                                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 md:py-5 outline-none focus:bg-white focus:border-indigo-500 focus:shadow-xl focus:shadow-indigo-500/5 transition-all font-bold text-slate-900 text-sm md:text-base placeholder:text-slate-300"
+                                        />
+                                        <Hash className="absolute right-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300 group-focus-within:text-indigo-500 transition-colors" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
 
                                 <div className="space-y-3">
                                   <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Son Geçerlilik Tarihi</label>

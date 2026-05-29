@@ -153,11 +153,12 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
     fields: [
       { key: 'title', label: 'Kupon Adı', required: true },
       { key: 'description', label: 'Kupon Hakkında', multiline: true },
-      { key: 'discountPercentage', label: 'İndirim Yüzdesi (Örn: 20)', isNumber: true, required: true },
+      { key: 'discountPercentage', label: 'İndirim Yüzdesi (Örn: 20)', isNumber: true },
       { key: 'companyId', label: 'Geçerli Firma', isCompanyPicker: true, required: true },
       { key: 'companyName', label: 'Firma Adı (Gösterim İçin)', required: true },
       { key: 'expiry_date', label: 'Bitiş Tarihi (Opsiyonel)', isDate: true },
       { key: 'total_limit', label: 'Kupon Sayısı (Sınır - Opsiyonel)', isNumber: true },
+      { key: 'isInformational', label: 'Kupon Türü', isBoolean: true },
       { key: 'isActive', label: 'Aktif Mi?', isBoolean: true },
     ]
   },
