@@ -55,7 +55,7 @@ const About = () => {
         </header>
 
         {/* Hero Section */}
-        <section className="grid lg:grid-cols-[1.2fr,1fr] gap-20 items-center mb-40">
+        <section className="grid lg:grid-cols-[1.2fr_1fr] gap-20 items-center mb-40">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

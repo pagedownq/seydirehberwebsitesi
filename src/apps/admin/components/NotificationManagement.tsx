@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
-import { 
-  collection, 
-  query, 
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
+import {
+  collection,
+  query,
+  orderBy,
+  onSnapshot,
+  addDoc,
+  deleteDoc,
+  doc,
   serverTimestamp,
   limit,
   writeBatch,
@@ -29,16 +29,16 @@ const NotificationManagement: React.FC = () => {
 
   useEffect(() => {
     const q = query(
-      collection(db, 'duyurular'), 
+      collection(db, 'duyurular'),
       orderBy('tarih', 'desc'),
       limit(50)
     );
-    
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       setNotifications(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       setLoading(false);
     });
-    
+
     return unsubscribe;
   }, []);
 
@@ -63,7 +63,7 @@ const NotificationManagement: React.FC = () => {
       setTitle('');
       setBody('');
       setStatus({ type: 'success', message: 'Bildirim başarıyla tüm kullanıcılara gönderildi.' });
-      
+
       setTimeout(() => setStatus(null), 5000);
     } catch (err: any) {
       console.error('Send error:', err);
@@ -84,17 +84,17 @@ const NotificationManagement: React.FC = () => {
 
   const handleClearEsnafHistory = async () => {
     if (!window.confirm('Tüm esnaf bildirim geçmişini silmek istediğinize emin misiniz? Bu işlem geri alınamaz.')) return;
-    
+
     setClearing(true);
     try {
       const q = query(collection(db, 'duyurular'), where('type', '==', 'review_reply'));
       const snapshot = await getDocs(q);
-      
+
       const batch = writeBatch(db);
       snapshot.docs.forEach((d) => {
         batch.delete(d.ref);
       });
-      
+
       await batch.commit();
       alert('Esnaf bildirim geçmişi başarıyla temizlendi.');
     } catch (err) {
@@ -115,32 +115,32 @@ const NotificationManagement: React.FC = () => {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '2rem' }}>
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.4fr]" style={{ display: 'grid', gap: '1.5rem' }}>
         {/* Send Form */}
         <div className="card" style={{ height: 'fit-content' }}>
           <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-             <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
-                <Send size={20} color="#6366f1" />
+             <div style={{ background: 'var(--admin-primary-soft)', padding: '0.5rem', borderRadius: '12px' }}>
+                <Send size={20} color="#388e3c" />
              </div>
-             <h3 style={{ margin: 0 }}>Yeni Bildirim Oluştur</h3>
+             <h3 style={{ margin: 0, fontWeight: 700 }}>Yeni Bildirim Oluştur</h3>
           </div>
 
           <form onSubmit={handleSend}>
             <div className="form-group">
               <label className="label">Bildirim Başlığı</label>
-              <input 
-                className="input" 
+              <input
+                className="input"
                 placeholder="Örn: Yeni Kampanya!"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
               />
             </div>
-            
+
             <div className="form-group">
               <label className="label">Bildirim İçeriği</label>
-              <textarea 
-                className="input" 
+              <textarea
+                className="input"
                 rows={4}
                 placeholder="Bildirim mesajınızı buraya yazın..."
                 value={body}
@@ -150,10 +150,25 @@ const NotificationManagement: React.FC = () => {
             </div>
 
 
+            {(title || body) && (
+              <div className="form-group">
+                <label className="label">Telefonda görünümü</label>
+                <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start', background: 'var(--admin-subtle)', border: '1px solid var(--admin-border)', borderRadius: '1rem', padding: '0.875rem' }}>
+                  <img src="/icon.png" alt="" style={{ width: 36, height: 36, borderRadius: 9, flexShrink: 0 }} />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-muted)' }}>Seydi Rehber · şimdi</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.9rem', overflowWrap: 'anywhere' }}>{title || 'Başlık'}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#374151', overflowWrap: 'anywhere' }}>{body || 'İçerik'}</div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {status && (
-              <div style={{ 
-                background: status.type === 'success' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)', 
-                color: status.type === 'success' ? '#22c55e' : '#ef4444',
+              <div style={{
+                background: status.type === 'success' ? '#f0fdf4' : '#fef2f2',
+                color: status.type === 'success' ? '#15803d' : '#b91c1c',
+                border: `1px solid ${status.type === 'success' ? '#bbf7d0' : '#fecaca'}`,
                 padding: '0.75rem',
                 borderRadius: '0.75rem',
                 marginBottom: '1rem',
@@ -171,8 +186,8 @@ const NotificationManagement: React.FC = () => {
                 </>
               )}
             </button>
-            <p style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '1rem', textAlign: 'center' }}>
-              * 'Gönder' butonuna bastığınızda bildirim tüm aktif kullanıcılara anında iletilecektir.
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.75rem', textAlign: 'center' }}>
+              Gönder'e bastığınızda bildirim bildirimleri açık olan tüm kullanıcılara hemen iletilir; geri alınamaz.
             </p>
           </form>
         </div>
@@ -180,16 +195,16 @@ const NotificationManagement: React.FC = () => {
         {/* History List */}
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-             <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
-                <Bell size={20} color="#f59e0b" />
+             <div style={{ background: '#fef3c7', padding: '0.5rem', borderRadius: '12px' }}>
+                <Bell size={20} color="#d97706" />
              </div>
-             <h3 style={{ margin: 0 }}>Genel Bildirim Geçmişi</h3>
+             <h3 style={{ margin: 0, fontWeight: 700 }}>Gönderilen Bildirimler</h3>
           </div>
 
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {loading ? (
               <div style={{ padding: '3rem', textAlign: 'center' }}>
-                <Loader2 className="spin" />
+                <Loader2 className="spin" style={{ margin: '0 auto' }} />
               </div>
             ) : notifications.filter(n => n.type !== 'review_reply').length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -218,9 +233,9 @@ const NotificationManagement: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
-                        <button 
-                          className="btn btn-outline" 
-                          style={{ padding: '0.4rem', color: '#ef4444' }} 
+                        <button
+                          className="btn btn-danger icon-btn"
+                          title="Geçmişten sil"
                           onClick={() => handleDelete(notif.id)}
                         >
                           <Trash2 size={16} />
@@ -235,18 +250,18 @@ const NotificationManagement: React.FC = () => {
         </div>
 
         {/* Esnaf Notification History */}
-        <div className="card" style={{ padding: 0, overflow: 'hidden', marginTop: '2rem', gridColumn: 'span 2' }}>
+        <div className="card xl:col-span-2" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '0.5rem', borderRadius: '12px' }}>
-                    <MessageSquare size={20} color="#10b981" />
+                <div style={{ background: '#ccfbf1', padding: '0.5rem', borderRadius: '12px' }}>
+                    <MessageSquare size={20} color="#0d9488" />
                 </div>
-                <h3 style={{ margin: 0 }}>Esnaf Bildirim Geçmişi (Yorum Yanıtları)</h3>
+                <h3 style={{ margin: 0, fontWeight: 700 }}>Esnaf Bildirimleri (Yorum Yanıtları)</h3>
              </div>
-             
-             <button 
-               className="btn btn-outline" 
-               style={{ color: '#ef4444', borderColor: '#fee2e2', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem' }}
+
+             <button
+               className="btn btn-danger"
+               style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}
                onClick={handleClearEsnafHistory}
                disabled={clearing || notifications.filter(n => n.type === 'review_reply').length === 0}
              >
@@ -258,7 +273,7 @@ const NotificationManagement: React.FC = () => {
           <div style={{ maxHeight: '400px', overflowY: 'auto' }}>
             {loading ? (
               <div style={{ padding: '3rem', textAlign: 'center' }}>
-                <Loader2 className="spin" />
+                <Loader2 className="spin" style={{ margin: '0 auto' }} />
               </div>
             ) : notifications.filter(n => n.type === 'review_reply').length === 0 ? (
               <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
@@ -287,9 +302,9 @@ const NotificationManagement: React.FC = () => {
                         </div>
                       </td>
                       <td style={{ padding: '1rem' }}>
-                        <button 
-                          className="btn btn-outline" 
-                          style={{ padding: '0.4rem', color: '#ef4444' }} 
+                        <button
+                          className="btn btn-danger icon-btn"
+                          title="Geçmişten sil"
                           onClick={() => handleDelete(notif.id)}
                         >
                           <Trash2 size={16} />

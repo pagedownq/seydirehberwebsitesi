@@ -1,14 +1,17 @@
 import { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
+import LiveStats from './LiveStats';
 import { collection, query, getCountFromServer, where } from 'firebase/firestore';
-import { Users, Activity, Award, Clock, MapPin, Bus, Tag, MessageSquare, ShieldCheck, Image, Store, CheckCircle2, Gavel, MessagesSquare } from 'lucide-react';
+import { Users, Calendar, Building2, LifeBuoy, Compass, Bus, Tag, MessageSquare, Flag, Image, Store, CheckCircle2, Gavel, MessagesSquare, EyeOff, RefreshCw, ChevronRight, type LucideIcon } from 'lucide-react';
 
 interface DashboardOverviewProps {
   permissions: Record<string, boolean>;
+  onNavigate: (tab: string) => void;
 }
 
-const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
+const DashboardOverview = ({ permissions, onNavigate }: DashboardOverviewProps) => {
   const [loading, setLoading] = useState(true);
+  const [loaded, setLoaded] = useState(false);
   const [stats, setStats] = useState({
     firmalar: 0,
     etkinlikler: 0,
@@ -133,6 +136,7 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
       }
 
       setStats(newStats);
+      setLoaded(true);
     } catch (error) {
       console.error("İstatistikler yüklenirken genel hata oluştu:", error);
     } finally {
@@ -144,87 +148,125 @@ const DashboardOverview = ({ permissions }: DashboardOverviewProps) => {
     fetchStats();
   }, [permissions]);
 
+  // Bekleyen işler: sıfırdan büyükse dikkat çekecek şekilde gösterilir.
+  const pending = [
+    { perm: 'canManageSupport', tab: 'yardim_destek', icon: LifeBuoy, label: 'Bekleyen destek talebi', value: stats.destek_bekleyen },
+    { perm: 'canManageReports', tab: 'sikayetler', icon: Flag, label: 'Bekleyen yorum şikayeti', value: stats.bekleyen_sikayetler },
+    { perm: 'canManageForum', tab: 'forum_moderation', icon: EyeOff, label: 'Gizlenen forum gönderisi', value: stats.forum_gizli_gonderi },
+  ].filter((p) => permissions[p.perm]);
+  const pendingTotal = pending.reduce((sum, p) => sum + p.value, 0);
+
+  const content = [
+    { perm: 'canManageCompanies', tab: 'firmalar', icon: Building2, label: 'Firma', value: stats.firmalar, color: '#2e7d32' },
+    { perm: 'canManageEvents', tab: 'etkinlikler', icon: Calendar, label: 'Etkinlik', value: stats.etkinlikler, color: '#db2777' },
+    { perm: 'canManagePlaces', tab: 'gezilecek_yerler', icon: Compass, label: 'Gezilecek yer', value: stats.gezilecek_yerler, color: '#7c3aed' },
+    { perm: 'canManageBanners', tab: 'banners', icon: Image, label: 'Banner', value: stats.banners, color: '#0891b2' },
+    { perm: 'canManageNotaries', tab: 'noterler', icon: Gavel, label: 'Noter', value: stats.noterler, color: '#475569' },
+    { perm: 'canManageMarkets', tab: 'pazarlar', icon: Store, label: 'Pazar', value: stats.pazarlar, color: '#ca8a04' },
+    { perm: 'canManageBuses', tab: 'otobus_saatleri', icon: Bus, label: 'Otobüs güzergahı', value: stats.otobus_saatleri, color: '#2563eb' },
+    { perm: 'canManageEsnaf', tab: 'esnaf_users', icon: Users, label: 'Esnaf hesabı', value: stats.esnaf_users, color: '#0d9488' },
+    { perm: 'canManageCoupons', tab: 'coupons', icon: Tag, label: 'Kupon', value: stats.coupons, color: '#ea580c' },
+    { perm: 'canManageCoupons', tab: 'coupons', icon: CheckCircle2, label: 'Kullanılan kupon kodu', value: stats.used_coupons, color: '#16a34a' },
+    { perm: 'canManageReviews', tab: 'reviews', icon: MessageSquare, label: 'Yorum (toplam)', value: stats.reviews, color: '#4f46e5' },
+    { perm: 'canManageReviews', tab: 'reviews', icon: Store, label: 'Firma yorumu', value: stats.firma_reviews, color: '#4f46e5' },
+    { perm: 'canManageForum', tab: 'forum_moderation', icon: MessagesSquare, label: 'Forum gönderisi', value: stats.forum_gonderi, color: '#9333ea' },
+  ].filter((c) => permissions[c.perm]);
+
   return (
-    <div className="dashboard-overview animate-in fade-in duration-500">
-      <div className="header mb-10 flex justify-between items-center">
+    <div className="dashboard-overview">
+      <div className="header">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white">Yönetim Özeti</h1>
-          <p className="text-slate-400 font-medium">Sistemdeki güncel istatistikler ve genel durum.</p>
+          <h1>Hoş geldiniz 👋</h1>
+          <p className="text-muted">Panelde bekleyen işler ve uygulamadaki içeriklerin özeti.</p>
         </div>
-        <button 
-          onClick={fetchStats} 
-          disabled={loading}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white font-semibold rounded-xl text-sm transition-all shadow-lg active:scale-95 flex items-center gap-2"
-        >
-          {loading ? 'Güncelleniyor...' : 'Verileri Yenile'}
+        <button onClick={fetchStats} disabled={loading} className="btn btn-outline">
+          <RefreshCw size={16} className={loading ? 'spin' : ''} />
+          {loading ? 'Güncelleniyor...' : 'Yenile'}
         </button>
       </div>
 
-      {loading && stats.firmalar === 0 ? (
-        <div className="text-center py-20 text-slate-400 font-medium animate-pulse">
-          İstatistikler yükleniyor, lütfen bekleyin...
-        </div>
+      <LiveStats />
+
+      {!loaded ? (
+        <div className="card empty-state">İstatistikler yükleniyor...</div>
       ) : (
-        <div className="grid">
-          {permissions['canManageCompanies'] && <StatCard icon={Award} label="Kayıtlı Firma" value={stats.firmalar} max={500} color="#6366f1" />}
-          {permissions['canManageEvents'] && <StatCard icon={Activity} label="Aktif Etkinlik" value={stats.etkinlikler} max={50} color="#ec4899" />}
-          {permissions['canManagePlaces'] && <StatCard icon={MapPin} label="Gezilecek Yer" value={stats.gezilecek_yerler} max={100} color="#a855f7" />}
-          {permissions['canManageSupport'] && <StatCard icon={Clock} label="Bekleyen Destek" value={stats.destek_bekleyen} max={20} color="#f59e0b" />}
-          {permissions['canManageNotaries'] && <StatCard icon={Gavel} label="Noterler" value={stats.noterler} max={30} color="#ef4444" />}
-          {permissions['canManageMarkets'] && <StatCard icon={Store} label="Pazarlar" value={stats.pazarlar} max={10} color="#10b981" />}
-          {permissions['canManageBuses'] && <StatCard icon={Bus} label="Otobüs Saatleri" value={stats.otobus_saatleri} max={200} color="#0ea5e9" />}
-          {permissions['canManageCoupons'] && <StatCard icon={Tag} label="Kupon Sayısı" value={stats.coupons} max={1000} color="#f97316" />}
-          {permissions['canManageCoupons'] && <StatCard icon={CheckCircle2} label="Kullanılan Kuponlar" value={stats.used_coupons} max={stats.coupons || 100} color="#22c55e" />}
-          {permissions['canManageReviews'] && <StatCard icon={MessageSquare} label="Yorumlar" value={stats.reviews} max={1000} color="#8b5cf6" />}
-          {permissions['canManageReviews'] && <StatCard icon={Store} label="Firma Yorumları" value={stats.firma_reviews} max={1000} color="#6366f1" />}
-          {permissions['canManageReports'] && <StatCard icon={ShieldCheck} label="Bekleyen Şikayet" value={stats.bekleyen_sikayetler} max={10} color="#f43f5e" />}
-          {permissions['canManageEsnaf'] && <StatCard icon={Users} label="Esnaf Hesapları" value={stats.esnaf_users} max={100} color="#06b6d4" />}
-          {permissions['canManageBanners'] && <StatCard icon={Image} label="Bannerler" value={stats.banners} max={10} color="#db2777" />}
-          {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Toplam Forum Gönderisi" value={stats.forum_gonderi} max={500} color="#6366f1" />}
-          {permissions['canManageForum'] && <StatCard icon={MessagesSquare} label="Gizlenen Forum Gönderisi" value={stats.forum_gizli_gonderi} max={50} color="#a855f7" />}
-        </div>
+        <>
+          {pending.length > 0 && (
+            <>
+              <h2 className="section-title">İlgilenmeniz gerekenler</h2>
+              {pendingTotal === 0 ? (
+                <div className="card flex items-center gap-3" style={{ background: 'var(--admin-primary-soft)', borderColor: '#c8e6c9' }}>
+                  <CheckCircle2 size={22} style={{ color: 'var(--admin-primary)' }} />
+                  <p className="font-semibold" style={{ color: 'var(--admin-primary-dark)' }}>
+                    Bekleyen iş yok. Destek, şikayet ve forum tarafı temiz.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid">
+                  {pending.map((p) => (
+                    <StatCard
+                      key={p.tab}
+                      icon={p.icon}
+                      label={p.label}
+                      value={p.value}
+                      color={p.value > 0 ? '#d97706' : '#16a34a'}
+                      highlight={p.value > 0}
+                      onClick={() => onNavigate(p.tab)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {content.length > 0 && (
+            <>
+              <h2 className="section-title">Uygulamadaki içerikler</h2>
+              <div className="grid">
+                {content.map((c) => (
+                  <StatCard
+                    key={c.label}
+                    icon={c.icon}
+                    label={c.label}
+                    value={c.value}
+                    color={c.color}
+                    onClick={() => onNavigate(c.tab)}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </>
       )}
-
-      <div className="card mt-10 border-l-4 border-l-indigo-500 bg-indigo-500/5">
-        <h3 className="text-lg font-bold text-white mb-2">Hızlı Durum</h3>
-        <p className="text-slate-400 text-sm">Tüm servisler aktif ve sorunsuz çalışıyor. Son 24 saat içinde sistem performansı %99.9 seviyesinde.</p>
-      </div>
     </div>
   );
 };
 
-const StatCard = ({ icon: Icon, label, value, max, color }: any) => {
-  const percentage = Math.min((value / (max || 100)) * 100, 100);
-  
-  return (
-    <div className="card group">
-      <div className="flex justify-between items-start">
-        <div>
-          <p className="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{label}</p>
-          <h2 className="text-3xl font-black text-white group-hover:text-indigo-400 transition-colors">{value}</h2>
-        </div>
-        <div className="p-3 rounded-2xl transition-all duration-300 group-hover:scale-110" style={{ background: `${color}15`, color }}>
-          <Icon size={22} strokeWidth={2.5} />
-        </div>
-      </div>
-      <div className="mt-4 flex flex-col gap-1">
-        <div className="flex justify-between text-[10px] font-bold text-slate-600 uppercase tracking-tighter">
-          <span>Doluluk</span>
-          <span>%{Math.round(percentage)}</span>
-        </div>
-        <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden">
-          <div 
-            className="h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px] shadow-current" 
-            style={{ 
-              backgroundColor: color, 
-              width: `${percentage}%`,
-              color: color 
-            }}
-          ></div>
-        </div>
-      </div>
+interface StatCardProps {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  color: string;
+  highlight?: boolean;
+  onClick: () => void;
+}
+
+const StatCard = ({ icon: Icon, label, value, color, highlight, onClick }: StatCardProps) => (
+  <button
+    type="button"
+    className="stat-card group"
+    onClick={onClick}
+    style={highlight ? { borderColor: '#fcd34d', background: '#fffbeb' } : undefined}
+  >
+    <div className="stat-icon" style={{ background: `${color}14`, color }}>
+      <Icon size={22} strokeWidth={2.2} />
     </div>
-  );
-};
+    <div className="min-w-0 flex-1">
+      <p className="text-2xl font-extrabold text-gray-900 leading-tight tabular-nums">{value.toLocaleString('tr-TR')}</p>
+      <p className="text-sm text-gray-500 font-medium truncate">{label}</p>
+    </div>
+    <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
+  </button>
+);
 
 export default DashboardOverview;

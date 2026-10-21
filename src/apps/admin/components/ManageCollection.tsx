@@ -1,36 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../../../lib/firebase';
 import { supabase } from '../../../lib/supabase';
-import { 
-  collection, 
-  query, 
+import {
+  collection,
+  query,
   where,
   getDocs,
-  orderBy, 
-  onSnapshot, 
-  addDoc, 
+  orderBy,
+  onSnapshot,
+  addDoc,
   setDoc,
-  updateDoc, 
-  deleteDoc, 
-  doc, 
+  updateDoc,
+  deleteDoc,
+  doc,
   serverTimestamp,
   Timestamp,
   writeBatch
 } from 'firebase/firestore';
-import { Plus, Trash2, Edit, X, Loader2, Search, GripVertical } from 'lucide-react';
-import { 
-  DndContext, 
-  closestCenter, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
-  useSensors, 
-  type DragEndEvent 
+import { Plus, Trash2, Edit, X, Loader2, Search, GripVertical, Calendar, Inbox } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent
 } from '@dnd-kit/core';
-import { 
-  arrayMove, 
-  SortableContext, 
-  sortableKeyboardCoordinates, 
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
   verticalListSortingStrategy,
   useSortable
 } from '@dnd-kit/sortable';
@@ -82,11 +82,11 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
     // Determine sort field based on collection type
     // If it's firmalar, we use 'order', then 'ad'
     let q = query(collection(db, collectionId));
-    
+
     // Sort logic will be applied locally on the fetched items
     const unsubscribe = onSnapshot(q, (snapshot) => {
       let docs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() as any }));
-      
+
       // Perform manual sorting for specific collections
       if (config.reorderable) {
         docs.sort((a, b) => {
@@ -100,7 +100,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
         });
       } else {
         // Fallback sorts for other collections
-        const sortField = collectionId === 'yardim_destek' ? 'tarih' : 
+        const sortField = collectionId === 'yardim_destek' ? 'tarih' :
                           collectionId === 'reviews' ? 'createdAt' : 'created_at';
         docs.sort((a, b) => {
           const aVal = a[sortField];
@@ -110,7 +110,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
           return bVal - aVal; // Descending
         });
       }
-      
+
       setItems(docs);
       setLoading(false);
     }, (error) => {
@@ -184,7 +184,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
   const handleUploadImage = async (file: File): Promise<string> => {
     if (!config.bucket) return '';
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${file.name.replace(/\s+/g, '_')}`;
-    
+
     const { error } = await supabase.storage
       .from(config.bucket)
       .upload(fileName, file, {
@@ -213,7 +213,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
       const newImageUrls = await Promise.all(
         selectedFiles.map(file => handleUploadImage(file))
       );
-      
+
       const validNewUrls = newImageUrls.filter(url => url !== '');
       const finalImages = [...existingImages, ...validNewUrls];
 
@@ -226,7 +226,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
             return url.split('/').pop() || '';
           }
         }).filter(name => name !== '');
-        
+
         if (fileNames.length > 0) {
           await supabase.storage.from(config.bucket).remove(fileNames);
         }
@@ -234,12 +234,12 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
 
       const cleanData = { ...formData };
       delete cleanData.id;
-      
+
       // Update image arrays
       cleanData.images = finalImages;
       cleanData.image_url = finalImages.length > 0 ? finalImages[0] : null;
       if (config.bucket === 'firmalar') cleanData.gorsel = cleanData.image_url;
-      
+
       // Handle specialized fields
       config.fields.forEach(f => {
         if (f.isNumber) {
@@ -285,10 +285,10 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
 
   const handleDelete = async (id: string, itemData: any) => {
     if (!window.confirm('Bu ögeyi silmek istediğinize emin misiniz?')) return;
-    
+
     try {
       const images = itemData.images || (itemData.image_url ? [itemData.image_url] : (itemData.gorsel ? [itemData.gorsel] : []));
-      
+
       if (images.length > 0 && config.bucket) {
         const fileNames = images.map((url: string) => {
           try {
@@ -309,7 +309,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
   };
 
   const filteredItems = items.filter(item => {
-    const matchesSearch = Object.values(item).some(val => 
+    const matchesSearch = Object.values(item).some(val =>
       String(val).toLowerCase().includes(searchTerm.toLowerCase())
     );
     const matchesFirm = !selectedCompanyId || item.companyId === selectedCompanyId;
@@ -321,13 +321,17 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
       <div className="header">
         <div>
           <h1>{config.title}</h1>
-          <p className="text-muted">{items.length} kayıt bulundu</p>
+          <p className="text-muted">
+            {items.length} kayıt
+            {filteredItems.length !== items.length && ` · ${filteredItems.length} tanesi gösteriliyor`}
+            {config.reorderable && ' · Sırayı değiştirmek için satırları tutup sürükleyin'}
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+        <div className="header-actions">
           {config.fields.some(f => f.isCompanyPicker) && (
-            <select 
-              className="input" 
-              style={{ width: '200px', fontSize: '0.85rem' }}
+            <select
+              className="input"
+              style={{ width: '200px' }}
               value={selectedCompanyId}
               onChange={(e) => setSelectedCompanyId(e.target.value)}
             >
@@ -338,28 +342,29 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
             </select>
           )}
           <div className="input-group" style={{ position: 'relative' }}>
-            <Search size={18} style={{ position: 'absolute', left: 12, top: 12, color: 'var(--text-muted)' }} />
-            <input 
-              className="input" 
-              placeholder="Ara..." 
-              style={{ paddingLeft: '2.5rem', width: '250px' }}
+            <Search size={17} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            <input
+              className="input"
+              placeholder="Bu listede ara..."
+              style={{ paddingLeft: '2.4rem', width: '240px', maxWidth: '100%' }}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <button className="btn btn-primary" onClick={() => handleOpenModal()}>
-            <Plus size={20} />
-            Ekle
+            <Plus size={18} />
+            Yeni Ekle
           </button>
         </div>
       </div>
 
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <DndContext 
+        <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
+          <div className="table-scroll">
           <table className="table">
             <thead>
               <tr>
@@ -370,18 +375,18 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                 <th>İşlem</th>
               </tr>
             </thead>
-            <SortableContext 
-              items={filteredItems.map(i => i.id)} 
+            <SortableContext
+              items={filteredItems.map(i => i.id)}
               strategy={verticalListSortingStrategy}
               disabled={!config.reorderable}
             >
               <tbody>
                 {filteredItems.map((item) => (
-                    <SortableRow 
-                        key={item.id} 
-                        item={item} 
-                        collectionId={collectionId} 
-                        config={config} 
+                    <SortableRow
+                        key={item.id}
+                        item={item}
+                        collectionId={collectionId}
+                        config={config}
                         isDraggable={config.reorderable && searchTerm === ''} // Disable drag if searching
                         handleOpenModal={handleOpenModal}
                         handleDelete={() => handleDelete(item.id, item)}
@@ -391,11 +396,23 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
               </tbody>
             </SortableContext>
           </table>
+          </div>
         </DndContext>
         {loading && (
-          <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <Loader2 className="spin" />
+          <div className="empty-state">
+            <Loader2 className="spin" style={{ margin: '0 auto 0.5rem' }} />
             <p>Yükleniyor...</p>
+          </div>
+        )}
+        {!loading && filteredItems.length === 0 && (
+          <div className="empty-state">
+            <Inbox size={36} style={{ margin: '0 auto 0.75rem', color: 'var(--admin-text-faint)' }} />
+            <p style={{ fontWeight: 600, color: 'var(--admin-text)' }}>
+              {items.length === 0 ? 'Henüz kayıt yok' : 'Aramanızla eşleşen kayıt yok'}
+            </p>
+            <p style={{ fontSize: '0.875rem', marginTop: 4 }}>
+              {items.length === 0 ? '"Yeni Ekle" butonuyla ilk kaydı oluşturabilirsiniz.' : 'Arama metnini veya firma filtresini değiştirin.'}
+            </p>
           </div>
         )}
       </div>
@@ -403,18 +420,21 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
       {showModal && (
         <div className="modal-overlay">
           <div className="modal">
-            <div className="modal-header" style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
+            <div className="modal-header" style={{
+              display: 'flex',
+              justifyContent: 'space-between',
               alignItems: 'center',
-              marginBottom: '2rem',
+              marginBottom: '1.5rem',
               paddingBottom: '1rem',
               borderBottom: '1px solid var(--admin-border)'
             }}>
-              <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800 }}>{editingItem ? 'Ögeyi Düzenle' : 'Yeni Öge Ekle'}</h2>
-              <button 
-                className="btn btn-outline" 
-                style={{ padding: '0.5rem', borderRadius: '50%', width: '40px', height: '40px', justifyContent: 'center' }} 
+              <div>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 800 }}>{editingItem ? 'Kaydı Düzenle' : 'Yeni Kayıt'}</h2>
+                <p className="text-muted" style={{ fontSize: '0.8125rem', marginTop: 2 }}>{config.title}</p>
+              </div>
+              <button
+                type="button"
+                className="btn btn-outline icon-btn" 
                 onClick={() => setShowModal(false)}
               >
                 <X size={20} />
@@ -426,19 +446,19 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                   <label className="label">Fotoğraflar</label>
                   <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1rem' }}>
                     {/* ADD BUTTON */}
-                    <div 
-                      className="img-preview" 
+                    <div
+                      className="img-preview"
                       onClick={() => document.getElementById('fileInput')?.click()}
                     >
-                      <Plus size={24} />
-                      <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>Ekle</div>
+                      <Plus size={22} />
+                      <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>Fotoğraf ekle</div>
                     </div>
 
                     {/* EXISTING IMAGES */}
                     {existingImages.map((url, idx) => (
                       <div key={`existing-${idx}`} className="image-gallery-item">
                         <img src={url} alt="Existing" />
-                        <button 
+                        <button
                           type="button"
                           className="remove-img-btn"
                           onClick={() => {
@@ -454,15 +474,14 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                     {/* NEWLY SELECTED IMAGES */}
                     {selectedFiles.map((file, idx) => (
                       <div key={`new-${idx}`} className="image-gallery-item">
-                        <img 
-                          src={URL.createObjectURL(file)} 
-                          alt="New" 
-                          style={{ border: '2px solid var(--admin-primary)' }} 
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="New"
+                          style={{ border: '2px solid var(--admin-primary-brand)' }} 
                         />
-                        <button 
+                        <button
                           type="button"
                           className="remove-img-btn"
-                          style={{ background: '#000' }}
                           onClick={() => setSelectedFiles(selectedFiles.filter((_, i) => i !== idx))}
                         >
                           <X size={14} />
@@ -470,11 +489,11 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                       </div>
                     ))}
                   </div>
-                  
-                  <input 
-                    type="file" 
-                    id="fileInput" 
-                    style={{ display: 'none' }} 
+
+                  <input
+                    type="file"
+                    id="fileInput"
+                    style={{ display: 'none' }}
                     accept="image/*"
                     multiple
                     onChange={(e) => {
@@ -498,63 +517,41 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                     <label className="label" style={{ marginBottom: 0 }}>{field.label}</label>
                     {field.key === 'expiry_date' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <button 
+                        <button
                           type="button"
-                          style={{ 
-                            fontSize: '0.7rem', 
-                            color: 'var(--admin-primary)', 
-                            fontWeight: '800', 
-                            cursor: 'pointer', 
-                            background: 'rgba(99, 102, 241, 0.1)', 
-                            border: '1px solid rgba(99, 102, 241, 0.2)',
-                            padding: '4px 10px',
-                            borderRadius: '8px',
-                            textTransform: 'uppercase',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.2)';
-                            e.currentTarget.style.borderColor = 'var(--admin-primary)';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.background = 'rgba(99, 102, 241, 0.1)';
-                            e.currentTarget.style.borderColor = 'rgba(99, 102, 241, 0.2)';
-                          }}
+                          className="chip-btn"
                           onClick={() => {
                             const nextYear = new Date();
                             nextYear.setFullYear(nextYear.getFullYear() + 1);
                             setFormData({ ...formData, [field.key]: Timestamp.fromDate(nextYear) });
                           }}
                         >
-                          <Plus size={12} /> 1 Yıl
+                          + 1 Yıl
                         </button>
                         <label style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}>
-                          <input 
-                            type="checkbox" 
-                            checked={!formData[field.key]} 
+                          <input
+                            type="checkbox"
+                            checked={!formData[field.key]}
                             onChange={(e) => {
                               if (e.target.checked) {
                                 setFormData({ ...formData, [field.key]: null });
                               } else {
                                 setFormData({ ...formData, [field.key]: Timestamp.now() });
                               }
-                            }} 
+                            }}
                           />
                           Sınırsız
                         </label>
                       </div>
                     )}
                   </div>
-                  
+
                   {field.isTimeList ? (
                     <div className="time-list-editor">
                       <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                        <input 
-                          type="time" 
-                          className="input" 
+                        <input
+                          type="time"
+                          className="input"
                           id={`time-input-${field.key}`}
                           style={{ width: 'auto' }}
                           onKeyDown={(e) => {
@@ -565,7 +562,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                             }
                           }}
                         />
-                        <button 
+                        <button
                           type="button"
                           id={`time-add-btn-${field.key}`}
                           className="btn btn-primary"
@@ -577,12 +574,12 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                                 .split(',')
                                 .map(t => t.trim())
                                 .filter(t => t !== '');
-                              
+
                               if (!currentTimes.includes(input.value)) {
                                 const newTimes = [...currentTimes, input.value].sort();
                                 setFormData({ ...formData, [field.key]: newTimes.join(',') });
                               }
-                              
+
                               input.value = '';
                               setTimeout(() => {
                                 input.focus();
@@ -594,10 +591,10 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                         </button>
 
                         {field.key === 'saatler_hergun' && (
-                          <button 
+                          <button
                             type="button"
                             className="btn btn-outline"
-                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                            style={{ padding: '0.4rem 1rem', fontSize: '0.8rem' }}
                             onClick={() => {
                               const currentTimes = formData['saatler_hergun'] || '';
                               if (currentTimes) {
@@ -621,20 +618,11 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                           .filter(t => t !== '')
                           .sort()
                           .map(time => (
-                            <div key={time} style={{ 
-                              background: 'var(--primary)', 
-                              color: 'white', 
-                              padding: '2px 8px', 
-                              borderRadius: '4px',
-                              fontSize: '0.8rem',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}>
+                            <div key={time} className="time-chip">
                               {time}
-                              <X 
-                                size={12} 
-                                style={{ cursor: 'pointer' }} 
+                              <X
+                                size={12}
+                                style={{ cursor: 'pointer' }}
                                 onClick={() => {
                                   const newTimes = (formData[field.key] as string)
                                     .split(',')
@@ -650,14 +638,14 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                     </div>
                   ) : field.isCompanyPicker ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <input 
+                      <input
                         className="input"
                         placeholder="Firma ara..."
                         value={companySearch}
                         onChange={(e) => setCompanySearch(e.target.value)}
                         style={{ padding: '0.4rem', fontSize: '0.8rem' }}
                       />
-                      <select 
+                      <select
                         className="input"
                         value={formData[field.key] || ''}
                         onChange={(e) => {
@@ -689,14 +677,14 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                       )}
                     </div>
                   ) : field.multiline ? (
-                    <textarea 
-                      className="input" 
+                    <textarea
+                      className="input"
                       rows={4}
                       value={formData[field.key] || ''}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                     />
                   ) : field.key === 'isInformational' ? (
-                    <select 
+                    <select
                       className="input"
                       value={formData[field.key] ? 'true' : 'false'}
                       onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value === 'true' })}
@@ -707,8 +695,8 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                   ) : field.isBoolean ? (
                     <div>
                       <label className="switch">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={formData[field.key] || false}
                           onChange={(e) => setFormData({ ...formData, [field.key]: e.target.checked })}
                         />
@@ -716,7 +704,7 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                       </label>
                     </div>
                   ) : (
-                    <input 
+                    <input
                       className="input"
                       type={field.isDate ? 'date' : field.isTime ? 'time' : field.isNumber ? 'number' : 'text'}
                       value={(() => {
@@ -736,18 +724,18 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
 
               {/* Special Handling for Permissions in Admin Management */}
               {collectionId === 'admins' && config.fields.some(f => f.key.startsWith('canManage')) && (
-                <div style={{ 
-                  marginTop: '2rem', 
-                  padding: '1.5rem', 
-                  background: 'rgba(255, 255, 255, 0.03)', 
+                <div style={{
+                  marginTop: '2rem',
+                  padding: '1.5rem',
+                  background: 'var(--admin-subtle)', 
                   borderRadius: '1.25rem',
                   border: '1px solid var(--admin-border)'
                 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                     <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--admin-text)' }}>Yönetici Yetkileri</h3>
-                    <button 
-                      type="button" 
-                      className="btn btn-outline" 
+                    <button
+                      type="button"
+                      className="btn btn-outline"
                       style={{ fontSize: '0.75rem', padding: '0.4rem 0.8rem', height: 'auto' }}
                       onClick={() => {
                         const permissions = config.fields.filter(f => f.key.startsWith('canManage'));
@@ -762,10 +750,10 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
                     {config.fields.filter(f => f.key.startsWith('canManage')).map(field => (
-                      <div key={field.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'rgba(15, 23, 42, 0.4)', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--admin-border)' }}>
-                        <label className="switch" style={{ transform: 'scale(0.8)' }}>
-                          <input 
-                            type="checkbox" 
+                      <div key={field.key} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: '#fff', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--admin-border)' }}>
+                        <label className="switch">
+                          <input
+                            type="checkbox"
                             checked={formData[field.key] || false}
                             onChange={(e) => setFormData({ ...formData, [field.key]: e.target.checked })}
                           />
@@ -778,17 +766,20 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
                 </div>
               )}
 
-              <div className="form-actions" style={{ marginTop: '2.5rem' }}>
-                <button className="btn btn-primary" style={{ width: '100%', padding: '1rem', fontSize: '1rem' }} disabled={uploading}>
+              <div className="form-actions" style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem' }}>
+                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)} disabled={uploading}>
+                  Vazgeç
+                </button>
+                <button className="btn btn-primary" style={{ flex: 1, padding: '0.8rem' }} disabled={uploading}>
                   {uploading ? (
                     <>
-                      <Loader2 className="spin" size={20} />
-                      Yükleniyor...
+                      <Loader2 className="spin" size={18} />
+                      Kaydediliyor...
                     </>
                   ) : (
                     <>
-                      {editingItem ? <Edit size={20} /> : <Plus size={20} />}
-                      {editingItem ? 'Değişiklikleri Kaydet' : 'Sisteme Ekle'}
+                      {editingItem ? <Edit size={18} /> : <Plus size={18} />}
+                      {editingItem ? 'Değişiklikleri Kaydet' : 'Kaydet'}
                     </>
                   )}
                 </button>
@@ -799,6 +790,12 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
       )}
     </div>
   );
+};
+
+const REPORT_STATUS_LABELS: Record<string, string> = {
+  pending: 'Bekliyor',
+  dismissed: 'Yorum kaldı',
+  reviewed_deleted: 'Yorum silindi',
 };
 
 const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal, handleDelete, onTabChange }: any) => {
@@ -815,7 +812,7 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-    background: isDragging ? 'var(--glass-bg)' : 'transparent',
+    background: isDragging ? 'var(--admin-primary-soft)' : 'transparent',
     zIndex: isDragging ? 2 : 1,
     position: 'relative' as any,
     borderBottom: '1px solid var(--border)'
@@ -826,13 +823,13 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
     try {
       const q = query(collection(db, "esnaf_users"), where("companyId", "==", companyId));
       const snapshot = await getDocs(q);
-      
+
       if (!snapshot.empty) {
         // Account exists, set credentials and redirect
         const esnafUserId = snapshot.docs[0].id;
         localStorage.setItem("esnaf_user_id", esnafUserId);
         localStorage.setItem("esnaf_firma_id", companyId);
-        
+
         // Redirect reliably in same tab to avoid popup blockers
         window.location.href = `/esnaf?auto_user=${esnafUserId}&auto_company=${companyId}`;
       } else {
@@ -856,50 +853,50 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
       )}
       {config.bucket && (
         <td style={{ padding: '1rem' }}>
-          <img 
-            src={item.image_url || item.gorsel || '/assets/fotoyok.png'} 
-            alt="" 
-            style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '1px solid var(--border)' }}
+          <img
+            src={item.image_url || item.gorsel || '/assets/fotoyok.png'}
+            alt=""
+            style={{ width: 56, height: 56, borderRadius: 12, objectFit: 'cover', border: '1px solid var(--border)', background: 'var(--admin-subtle)' }}
           />
         </td>
       )}
       <td style={{ padding: '1.25rem' }}>
-        <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: '0.25rem', color: 'var(--text)' }}>
+        <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.25rem', color: 'var(--text)' }}>
           {item.ad || item.title || item.baslik || item.ad_soyad || item.companyName || item.userName || item.username || item.guzergah || 'İsimsiz'}
-          {item.rating && <span style={{ color: '#f59e0b', marginLeft: '0.75rem', fontSize: '0.9rem' }}>★ {item.rating}</span>}
+          {item.rating && <span style={{ color: '#d97706', marginLeft: '0.75rem', fontSize: '0.9rem' }}>★ {item.rating}</span>}
           {item.order !== undefined && <span style={{ color: 'var(--text-muted)', marginLeft: '0.75rem', fontSize: '0.8rem', fontWeight: 400 }}>(Sıra: {item.order})</span>}
         </div>
-        
+
         <div style={{ display: 'flex', gap: '0.75rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-          {item.kategori && <span style={{ background: 'var(--glass-bg)', padding: '2px 8px', borderRadius: '4px' }}>{item.kategori}</span>}
+          {item.kategori && <span className="badge badge-neutral">{item.kategori}</span>}
           {item.tarih?.toDate && (
-            <span><i className="bi bi-clock me-1"></i> {format(item.tarih.toDate(), 'dd.MM.yyyy HH:mm')}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {format(item.tarih.toDate(), 'dd.MM.yyyy HH:mm')}</span>
           )}
           {item.createdAt?.toDate && (
-            <span><i className="bi bi-calendar3 me-1"></i> {format(item.createdAt.toDate(), 'dd.MM.yyyy HH:mm')}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {format(item.createdAt.toDate(), 'dd.MM.yyyy HH:mm')}</span>
           )}
-          
+
           {/* QUICK LINKS FOR FIRMALAR */}
           {collectionId === 'firmalar' && onTabChange && (
-            <div style={{ display: 'flex', gap: '0.5rem', marginLeft: '0.5rem' }}>
-              <button 
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+              <button
                 onClick={(e) => { e.stopPropagation(); onTabChange('coupons', item.id); }}
-                className="btn btn-outline" 
-                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#fbbf24', color: '#fbbf24' }}
+                className="chip-btn"
+                style={{ borderColor: '#fcd34d', color: '#b45309' }}
               >
                 Kuponlar
               </button>
-              <button 
+              <button
                 onClick={(e) => { e.stopPropagation(); onTabChange('reviews', item.id); }}
-                className="btn btn-outline" 
-                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#6366f1', color: '#6366f1' }}
+                className="chip-btn"
+                style={{ borderColor: '#c7d2fe', color: '#4338ca' }}
               >
                 Yorumlar
               </button>
-              <button 
+              <button
                 onClick={(e) => handleEsnafAccess(e, item.id)}
-                className="btn btn-outline" 
-                style={{ fontSize: '0.7rem', padding: '2px 8px', height: 'auto', borderColor: '#10b981', color: '#10b981' }}
+                className="chip-btn"
+                style={{ borderColor: '#a7f3d0', color: '#047857' }}
               >
                 Esnaf Paneli
               </button>
@@ -908,14 +905,8 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
         </div>
 
         {/* Specialized Information Display */}
-        {(collectionId === 'yardim_destek' || collectionId === 'reviews' || collectionId === 'coupons' || collectionId === 'sikayetler') && (
-          <div style={{ 
-            background: 'rgba(15, 23, 42, 0.4)', 
-            padding: '1rem', 
-            borderRadius: '12px', 
-            border: '1px solid var(--border)',
-            marginTop: '0.5rem'
-          }}>
+        {(collectionId === 'yardim_destek' || collectionId === 'reviews' || collectionId === 'coupons' || collectionId === 'sikayetler' || collectionId === 'otobus_saatleri') && (
+          <div className="detail-box">
             {collectionId === 'yardim_destek' && (
               <>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.5rem', fontSize: '0.85rem' }}>
@@ -931,14 +922,14 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                   )}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text)', lineHeight: '1.5' }}>
-                  <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Mesaj:</strong>
+                  <strong className="detail-label">Mesaj:</strong>
                   {item.mesaj}
                 </div>
               </>
             )}
             {collectionId === 'reviews' && (
               <div style={{ fontSize: '0.9rem', color: 'var(--text)', lineHeight: '1.5' }}>
-                 <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Yorum:</strong>
+                 <strong className="detail-label">Yorum:</strong>
                  "{item.comment}"
               </div>
             )}
@@ -950,8 +941,8 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                       <strong style={{ color: 'var(--text)' }}>Firma:</strong> {item.companyName}
                     </span>
                   )}
-                  <span style={{ color: item.isActive ? '#22c55e' : '#ef4444' }}>
-                    <strong>{item.isActive ? '✅ AKTIF' : '❌ PASIF'}</strong>
+                  <span className={`badge ${item.isActive ? 'badge-success' : 'badge-danger'}`}>
+                    {item.isActive ? 'Aktif' : 'Pasif'}
                   </span>
                   {item.expiry_date?.toDate && (
                     <span style={{ color: 'var(--text-muted)' }}>
@@ -966,7 +957,7 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                 </div>
                 {item.description && (
                   <div style={{ fontSize: '0.9rem', color: 'var(--text)', lineHeight: '1.5' }}>
-                    <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Kupon Detayı:</strong>
+                    <strong className="detail-label">Kupon Detayı:</strong>
                     {item.description}
                   </div>
                 )}
@@ -981,15 +972,8 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                     </span>
                   )}
                   {item.status && (
-                    <span style={{ 
-                      color: item.status === 'dismissed' ? '#22c55e' : (item.status === 'reviewed_deleted' ? '#ef4444' : '#f59e0b'),
-                      background: 'rgba(0,0,0,0.2)',
-                      padding: '2px 8px',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 'bold'
-                    }}>
-                      {item.status.toUpperCase()}
+                    <span className={`badge ${item.status === 'dismissed' ? 'badge-success' : (item.status === 'reviewed_deleted' ? 'badge-danger' : 'badge-warning')}`}>
+                      {REPORT_STATUS_LABELS[item.status] ?? item.status}
                     </span>
                   )}
                   {item.timestamp?.toDate && (
@@ -999,7 +983,7 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                   )}
                 </div>
                 <div style={{ fontSize: '0.9rem', color: 'var(--text)', lineHeight: '1.5' }}>
-                  <strong style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', marginBottom: '4px' }}>Yorum İçeriği:</strong>
+                  <strong className="detail-label">Yorum İçeriği:</strong>
                   "{item.content}"
                 </div>
               </>
@@ -1008,40 +992,40 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 {item.saatler_hergun && (
                   <div>
-                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Her Gün (Tüm Haftalık):</strong>
+                    <strong className="detail-label">Her Gün (Tüm Haftalık):</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {item.saatler_hergun.split(',').map((t: string) => (
-                        <span key={t} style={{ background: 'rgba(59, 130, 246, 0.2)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem', border: '1px solid rgba(59, 130, 246, 0.3)' }}>{t.trim()}</span>
+                        <span key={t} className="time-chip">{t.trim()}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {item.saatler_haftaici && (
                   <div>
-                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Hafta İçi:</strong>
+                    <strong className="detail-label">Hafta İçi:</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {item.saatler_haftaici.split(',').map((t: string) => (
-                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                        <span key={t} className="time-chip" style={{ background: '#f3f4f6', color: '#374151' }}>{t.trim()}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {item.saatler_cumartesi && (
                   <div>
-                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Cumartesi:</strong>
+                    <strong className="detail-label">Cumartesi:</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {item.saatler_cumartesi.split(',').map((t: string) => (
-                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                        <span key={t} className="time-chip" style={{ background: '#f3f4f6', color: '#374151' }}>{t.trim()}</span>
                       ))}
                     </div>
                   </div>
                 )}
                 {item.saatler_pazar && (
                   <div>
-                    <strong style={{ color: 'var(--text-muted)', fontSize: '0.75rem', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Pazar:</strong>
+                    <strong className="detail-label">Pazar:</strong>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
                       {item.saatler_pazar.split(',').map((t: string) => (
-                        <span key={t} style={{ background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px', fontSize: '0.8rem' }}>{t.trim()}</span>
+                        <span key={t} className="time-chip" style={{ background: '#f3f4f6', color: '#374151' }}>{t.trim()}</span>
                       ))}
                     </div>
                   </div>
@@ -1058,7 +1042,10 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
 
         {!(collectionId === 'yardim_destek' || collectionId === 'reviews' || collectionId === 'coupons' || collectionId === 'sikayetler' || collectionId === 'otobus_saatleri') && (
           <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-            {(item.hakkinda || item.konum || '')?.substring(0, 100)}...
+            {(() => {
+              const text = String(item.hakkinda || item.konum || '');
+              return text.length > 100 ? `${text.substring(0, 100)}…` : text;
+            })()}
           </div>
         )}
       </td>
@@ -1079,22 +1066,15 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                       alert('Yorum silinirken hata: ' + e.message);
                     }
                   }}
-                  style={{
-                    padding: '0.4rem 0.8rem',
-                    background: '#ef4444',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold'
-                  }}
+                  className="btn btn-danger"
+                  style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem' }}
                 >
-                  YORUMU SİL
+                  <Trash2 size={13} />
+                  Yorumu Sil
                 </button>
               ) : (
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-                  İŞLEM YAPILDI
+                <span className="badge badge-neutral" style={{ justifyContent: 'center' }}>
+                  İşlem yapıldı
                 </span>
               )}
               <button
@@ -1102,13 +1082,13 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#ef4444',
+                  color: 'var(--admin-text-muted)',
                   cursor: 'pointer',
-                  fontSize: '0.65rem',
-                  marginTop: '4px'
+                  fontSize: '0.75rem',
+                  textDecoration: 'underline'
                 }}
               >
-                Raporu Sil
+                Şikayet kaydını sil
               </button>
             </div>
           </td>
@@ -1116,27 +1096,19 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
         {collectionId === 'yardim_destek' && (
           <td style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', minWidth: '100px' }}>
-              <span style={{ 
-                fontSize: '0.65rem', 
-                fontWeight: 800, 
-                color: item.durum === 'Çözüldü' ? '#22c55e' : '#f59e0b',
-                background: item.durum === 'Çözüldü' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-                padding: '2px 8px',
-                borderRadius: '50px',
-                textAlign: 'center',
-                border: `1px solid ${item.durum === 'Çözüldü' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(245, 158, 11, 0.2)'}`
-              }}>
-                {item.durum?.toUpperCase() || 'BEKLIYOR'}
+              <span className={`badge ${item.durum === 'Çözüldü' ? 'badge-success' : 'badge-warning'}`} style={{ justifyContent: 'center' }}>
+                {item.durum || 'Bekliyor'}
               </span>
-              <label className="switch" style={{ alignSelf: 'center' }}>
-                <input 
-                  type="checkbox" 
-                  checked={item.durum === 'Çözüldü'} 
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--admin-text-muted)', cursor: 'pointer' }} title="Çözüldü olarak işaretlenince kullanıcıya bildirim gider">
+              <span className="switch">
+                <input
+                  type="checkbox"
+                  checked={item.durum === 'Çözüldü'}
                   onChange={async (e) => {
                     const newStatus = e.target.checked ? 'Çözüldü' : 'Bekliyor';
                     try {
                       await updateDoc(doc(db, collectionId, item.id), { durum: newStatus });
-                      
+
                       // Bildirim gönderme (Eğer durum 'Çözüldü' ise ve token varsa)
                       if (e.target.checked && item.fcm_token) {
                         await sendFCMNotification(
@@ -1154,19 +1126,20 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
                   }}
                 />
                 <span className="slider"></span>
+              </span>
+              Çözüldü
               </label>
-              <button 
-                className="btn btn-danger" 
-                style={{ 
-                  padding: '0.4rem', 
-                  borderRadius: '8px', 
-                  fontSize: '0.7rem',
+              <button
+                className="btn btn-danger"
+                style={{
+                  padding: '0.4rem',
+                  fontSize: '0.75rem',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '4px',
                   marginTop: '4px'
-                }} 
+                }}
                 onClick={() => handleDelete(item.id)}
               >
                 <Trash2 size={14} />
@@ -1178,10 +1151,10 @@ const SortableRow = ({ item, collectionId, config, isDraggable, handleOpenModal,
         {!(collectionId === 'yardim_destek' || collectionId === 'sikayetler') && (
           <td style={{ padding: '1rem' }}>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className="btn btn-outline" style={{ padding: '0.5rem', borderRadius: '50%', width: '36px', height: '36px', justifyContent: 'center' }} onClick={() => handleOpenModal(item)}>
+              <button className="btn btn-outline icon-btn" title="Düzenle" onClick={() => handleOpenModal(item)}>
                 <Edit size={16} />
               </button>
-              <button className="btn btn-danger" style={{ padding: '0.5rem', borderRadius: '50%', width: '36px', height: '36px', justifyContent: 'center' }} onClick={() => handleDelete(item.id, item.image_url)}>
+              <button className="btn btn-danger icon-btn" title="Sil" onClick={() => handleDelete(item.id, item.image_url)}>
                 <Trash2 size={16} />
               </button>
             </div>

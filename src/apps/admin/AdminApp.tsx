@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import './Admin.css';
 import Sidebar from './components/Sidebar';
+import { findMenuItem } from './menu';
 import DashboardOverview from './components/DashboardOverview';
 import ManageCollection from './components/ManageCollection';
 import NotificationManagement from './components/NotificationManagement';
@@ -9,7 +10,7 @@ import ForumModeration from './components/ForumModeration';
 import { auth, db } from '../../lib/firebase';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
-import { Loader2, LogOut, ShieldCheck } from 'lucide-react';
+import { Loader2, LogOut, Menu } from 'lucide-react';
 
 const ADMIN_EMAILS = [
   'mehmetirem305@gmail.com',
@@ -24,10 +25,13 @@ function AdminApp() {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleTabChange = (tab: string, filterId: string | null = null) => {
     setActiveTab(tab);
     setSelectedFilter(filterId);
+    setMenuOpen(false);
+    window.scrollTo({ top: 0 });
   };
 
   const checkAdminStatus = async (u: any): Promise<{ isAdmin: boolean; permissions: Record<string, boolean> }> => {
@@ -149,86 +153,100 @@ function AdminApp() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-[#0b0f1a]">
-        <Loader2 className="animate-spin text-indigo-500 mb-4" size={48} />
-        <p className="text-slate-400 font-medium animate-pulse">Sistem yükleniyor...</p>
+      <div className="admin-body h-screen flex flex-col items-center justify-center">
+        <Loader2 className="spin mb-4" size={40} style={{ color: 'var(--admin-primary)' }} />
+        <p className="text-gray-500 font-medium">Panel yükleniyor...</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="admin-body h-screen flex items-center justify-center bg-[#0b0f1a] p-6">
-        <div className="bg-[#161c2d] p-10 rounded-[2rem] shadow-2xl text-center max-w-md w-full border border-slate-800/50 relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-right from-indigo-500 via-purple-500 to-pink-500"></div>
-           <div className="w-20 h-20 bg-indigo-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 border border-indigo-500/20">
-              <ShieldCheck className="text-indigo-500" size={40} />
-           </div>
-           <h1 className="text-3xl font-extrabold text-white mb-3">Yönetim Paneli</h1>
-           <p className="text-slate-400 mb-10 text-sm leading-relaxed">
-             Seydi Rehber yönetim sistemine erişmek için<br />yetkili Google hesabınızla giriş yapın.
-           </p>
-           {error && (
-             <div className="bg-rose-500/10 border border-rose-500/20 text-rose-500 p-4 rounded-xl mb-8 text-sm font-medium">
-               {error}
-             </div>
-           )}
-           <button 
-             onClick={handleGoogleLogin} 
-             className="w-full bg-white text-slate-900 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-slate-100 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg"
-           >
-              <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="Google" />
-              Google ile Güvenli Giriş
-           </button>
-           <p className="mt-8 text-xs text-slate-500">
-             © 2026 Seydi Rehber. Tüm hakları saklıdır.
-           </p>
+      <div className="admin-body min-h-screen flex items-center justify-center p-6">
+        <div className="card max-w-sm w-full text-center" style={{ padding: '2.5rem 2rem' }}>
+          <img src="/icon.png" alt="Seydi Rehber" className="w-16 h-16 rounded-2xl mx-auto mb-5 shadow-sm" />
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-2">Yönetim Paneli</h1>
+          <p className="text-gray-500 mb-8 text-sm leading-relaxed">
+            Seydi Rehber yönetim paneline erişmek için yetkili Google hesabınızla giriş yapın.
+          </p>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-xl mb-6 text-sm font-medium">
+              {error}
+            </div>
+          )}
+          <button
+            onClick={handleGoogleLogin}
+            className="btn btn-outline w-full"
+            style={{ padding: '0.8rem 1rem', fontSize: '0.9375rem' }}
+          >
+            <img src="https://www.google.com/favicon.ico" className="w-5 h-5" alt="" />
+            Google ile Giriş Yap
+          </button>
+          <p className="mt-8 text-xs text-gray-400">© 2026 Seydi Rehber</p>
         </div>
       </div>
     );
   }
 
+  const current = findMenuItem(activeTab);
+
   return (
-    <div className="admin-body min-h-screen bg-[#0b0f1a] text-white flex">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={(tab) => handleTabChange(tab, null)} 
-        permissions={permissions} 
-        userName={user.displayName}
-        userPhoto={user.photoURL}
+    <div className="admin-body flex">
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={(tab) => handleTabChange(tab, null)}
+        permissions={permissions}
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
       />
-      <main className="flex-1 p-8 lg:p-12 overflow-y-auto relative">
-        {/* Top Header / Logout Section */}
-        <div className="flex justify-end items-center gap-6 mb-8 sticky top-0 z-10">
-          <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/30 rounded-xl border border-slate-700/50">
-            {user.photoURL && (
-              <img src={user.photoURL} alt={user.displayName} className="w-6 h-6 rounded-full border border-indigo-500/30" />
+      <main className="admin-main">
+        <header className="admin-topbar">
+          <button
+            type="button"
+            className="btn btn-outline icon-btn menu-toggle"
+            onClick={() => setMenuOpen(true)}
+            aria-label="Menüyü aç"
+          >
+            <Menu size={18} />
+          </button>
+          <div className="min-w-0 flex-1">
+            <p className="font-bold text-gray-900 truncate">{current?.label ?? 'Yönetim Paneli'}</p>
+            {current?.description && (
+              <p className="text-xs text-gray-500 truncate hidden sm:block">{current.description}</p>
             )}
-            <div className="flex flex-col items-start">
-              <span className="text-xs font-bold text-white leading-none">{user.displayName || 'Admin'}</span>
-              <span className="text-[10px] text-slate-500 leading-tight mt-0.5">{user.email}</span>
+          </div>
+          <div className="hidden md:flex items-center gap-2.5 pl-3 pr-4 py-1.5 bg-white rounded-full border border-gray-200">
+            {user.photoURL ? (
+              <img src={user.photoURL} alt="" className="w-7 h-7 rounded-full" />
+            ) : (
+              <div className="w-7 h-7 rounded-full bg-green-100 text-green-800 flex items-center justify-center text-xs font-bold">
+                {(user.displayName || user.email || 'A').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="leading-tight">
+              <p className="text-xs font-semibold text-gray-900">{user.displayName || 'Admin'}</p>
+              <p className="text-[11px] text-gray-500">{user.email}</p>
             </div>
           </div>
-          <button 
-            onClick={() => signOut(auth)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-rose-500/10 border border-slate-700 hover:border-rose-500/20 text-slate-400 hover:text-rose-500 rounded-xl transition-all font-medium text-sm shadow-sm"
-          >
+          <button type="button" onClick={() => signOut(auth)} className="btn btn-outline" title="Çıkış Yap">
             <LogOut size={16} />
-            Çıkış Yap
+            <span className="hidden sm:inline">Çıkış</span>
           </button>
-        </div>
+        </header>
 
         <SupportNotificationWatcher />
-        <div className="max-w-7xl mx-auto">
-          {activeTab === 'dashboard' ? <DashboardOverview permissions={permissions} /> : 
-           activeTab === 'notifications' ? <NotificationManagement /> :
-           activeTab === 'forum_moderation' ? <ForumModeration /> :
-           <ManageCollection 
-              key={activeTab} 
-              collectionId={activeTab} 
-              initialFilterId={selectedFilter}
-              onTabChange={handleTabChange}
-           />}
+        <div className="admin-content">
+          <div className="max-w-7xl mx-auto">
+            {activeTab === 'dashboard' ? <DashboardOverview permissions={permissions} onNavigate={handleTabChange} /> :
+             activeTab === 'notifications' ? <NotificationManagement /> :
+             activeTab === 'forum_moderation' ? <ForumModeration /> :
+             <ManageCollection
+                key={activeTab}
+                collectionId={activeTab}
+                initialFilterId={selectedFilter}
+                onTabChange={handleTabChange}
+             />}
+          </div>
         </div>
       </main>
     </div>
