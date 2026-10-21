@@ -161,6 +161,10 @@ const ManageCollection: React.FC<ManageCollectionProps> = ({ collectionId, initi
       setEditingItem(null);
       // Pre-fill companyId if filtering is active
       const defaults: any = {};
+      // Açma/kapama alanlarının varsayılanı (ör. iş ilanında "Yayında mı?" açık başlar)
+      config.fields.forEach(f => {
+        if (f.isBoolean && f.defaultValue !== undefined) defaults[f.key] = f.defaultValue;
+      });
       if (selectedCompanyId) {
         defaults.companyId = selectedCompanyId;
         const company = companies.find(c => c.id === selectedCompanyId);

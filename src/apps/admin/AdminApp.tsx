@@ -54,6 +54,7 @@ function AdminApp() {
         canManageAdmins: true,
         canManageSurveys: true,
         canManageForum: true,
+        canManageJobs: true,
       };
     } else {
       try {
@@ -78,6 +79,7 @@ function AdminApp() {
             canManageAdmins: data.canManageAdmins || false,
             canManageSurveys: data.canManageSurveys || false,
             canManageForum: data.canManageForum || false,
+            canManageJobs: data.canManageJobs || false,
           };
         }
       } catch (err) {

@@ -18,6 +18,8 @@ export interface FieldConfig {
   isCompanyPicker?: boolean;
   isTimeList?: boolean;
   isBoolean?: boolean;
+  /** Yeni kayıtta açma/kapama alanının başlangıç değeri (yoksa kapalı). */
+  defaultValue?: boolean;
 }
 
 export const COLLECTIONS: Record<string, { title: string; bucket: string | null; fields: FieldConfig[]; reorderable?: boolean }> = {
@@ -184,7 +186,29 @@ export const COLLECTIONS: Record<string, { title: string; bucket: string | null;
       { key: 'canManageCoupons', label: 'Kupon Yönetimi', isBoolean: true },
       { key: 'canManageAdmins', label: 'Admin Yönetimi', isBoolean: true },
       { key: 'canManageSurveys', label: 'Anket Yönetimi', isBoolean: true },
+      { key: 'canManageForum', label: 'Forum Moderasyonu', isBoolean: true },
+      { key: 'canManageJobs', label: 'İş İlanı Yönetimi', isBoolean: true },
     ]
+  },
+  // Expo uygulamasıyla eklendi. Bitiş tarihi boşsa ilan eklendikten 30 gün sonra uygulamada gizlenir.
+  is_ilanlari: {
+    title: 'İş İlanı Yönetimi',
+    bucket: null,
+    fields: [
+      { key: 'baslik', label: 'İlan Başlığı (Örn: Garson Aranıyor)', required: true },
+      { key: 'firma_adi', label: 'İşveren / Firma Adı', required: true },
+      { key: 'company_id', label: 'Uygulamadaki Firma (Opsiyonel)', isCompanyPicker: true },
+      { key: 'calisma_sekli', label: 'Çalışma Şekli (Tam Zamanlı, Yarı Zamanlı, Dönemsel...)' },
+      { key: 'aciklama', label: 'İş Tanımı / Aranan Nitelikler', multiline: true },
+      { key: 'calisma_saatleri', label: 'Çalışma Saatleri (Opsiyonel)' },
+      { key: 'ucret', label: 'Ücret (Opsiyonel)' },
+      { key: 'telefon', label: 'İletişim Telefonu', isPhone: true, required: true },
+      { key: 'whatsapp', label: 'WhatsApp ile ulaşılabilir mi?', isBoolean: true, defaultValue: true },
+      { key: 'adres', label: 'Görünecek Adres' },
+      { key: 'konum', label: 'Harita Konumu (Link, Koordinat veya DMS)' },
+      { key: 'bitis_tarihi', label: 'Yayın Bitiş Tarihi (Boşsa 30 gün)', isDate: true },
+      { key: 'aktif', label: 'Yayında mı?', isBoolean: true, defaultValue: true },
+    ],
   },
   surveys: {
     title: 'Anket Yönetimi',
