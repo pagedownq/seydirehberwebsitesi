@@ -1,14 +1,47 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/icon.png" />
-    <link rel="apple-touch-icon" href="/icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Seydişehir Rehberi - Nöbetçi Eczaneler, Otobüs Saatleri ve Firmalar</title>
+    <!-- <title>, açıklama, kanonik adres ve yapılandırılmış veri sayfaya göre src/components/Seo.tsx ile eklenir
+         (burada da <title> olursa React 19 ikinci bir <title> ekliyor). -->
+
+    <link rel="icon" type="image/png" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <meta name="theme-color" content="#43A047" />
+    <meta name="application-name" content="Seydi Rehber" />
+
+    <!-- iPhone Safari'de "App Store'da aç" bandı -->
+    <meta name="apple-itunes-app" content="app-id=6762803524" />
+
+    <!-- Yerel arama için konum bilgisi -->
+    <meta name="geo.region" content="TR-42" />
+    <meta name="geo.placename" content="Seydişehir, Konya" />
+    <meta name="geo.position" content="37.418;31.846" />
+    <meta name="ICBM" content="37.418, 31.846" />
+
+    <!-- Paylaşım önizlemesi (WhatsApp, Facebook, X JavaScript çalıştırmaz; bu yüzden statik) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Seydi Rehber" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:url" content="https://www.seydirehber.com.tr/" />
+    <meta property="og:title" content="Seydi Rehber — Seydişehir cebinizde" />
+    <meta property="og:description" content="Nöbetçi eczane, otobüs saatleri, halk pazarları, vefat ilanları, yerel haberler ve iş ilanları. Seydişehir’in ücretsiz şehir rehberi uygulaması." />
+    <meta property="og:image" content="https://www.seydirehber.com.tr/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Seydi Rehber uygulaması: Seydişehir cebinizde" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Seydi Rehber — Seydişehir cebinizde" />
+    <meta name="twitter:description" content="Nöbetçi eczane, otobüs saatleri, halk pazarları, vefat ilanları, yerel haberler ve iş ilanları. iOS ve Android’de ücretsiz." />
+    <meta name="twitter:image" content="https://www.seydirehber.com.tr/og-image.jpg" />
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      Seydi Rehber, Seydişehir için ücretsiz şehir rehberi uygulamasıdır: nöbetçi eczane, otobüs saatleri, halk
+      pazarları, vefat ilanları, yerel haberler ve iş ilanları. App Store ve Google Play'den indirebilirsiniz.
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

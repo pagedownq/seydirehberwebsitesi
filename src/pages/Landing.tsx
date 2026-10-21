@@ -7,6 +7,7 @@ import {
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { useEffect, useState, type ReactNode } from 'react';
+import { OG_IMAGE, Seo, SITE_URL } from '../components/Seo';
 
 const PLAY_URL = 'https://play.google.com/store/apps/details?id=com.mgverse.seydirehberim';
 const APP_STORE_URL = 'https://apps.apple.com/tr/app/seydi-rehber/id6762803524';
@@ -27,11 +28,11 @@ const NAV = [
 
 // Uygulamadaki gerçek hizmetler (Ana Sayfa ve Hizmetler ızgarası)
 const SERVICES: { icon: ReactNode; title: string; desc: string; tint: string; badge?: string }[] = [
-  { icon: <Cross />, title: 'Nöbetçi Eczane', desc: 'Bugün nöbetçi eczaneler, telefon ve harita konumuyla.', tint: 'bg-red-50 text-red-600' },
-  { icon: <Bus />, title: 'Otobüs Saatleri', desc: 'Güzergah güzergah sefer saatleri ve sıradaki otobüs.', tint: 'bg-teal-50 text-teal-600' },
-  { icon: <Store />, title: 'Halk Pazarları', desc: 'Hangi pazar hangi gün, nerede kuruluyor.', tint: 'bg-amber-50 text-amber-600' },
-  { icon: <Gavel />, title: 'Noterler', desc: 'Noterlerin adres, telefon ve çalışma günleri.', tint: 'bg-slate-100 text-slate-700' },
-  { icon: <HeartHandshake />, title: 'Vefat İlanları', desc: 'Belediyenin vefat duyuruları, isterseniz bildirimle.', tint: 'bg-slate-100 text-slate-600' },
+  { icon: <Cross />, title: 'Nöbetçi Eczane', desc: 'Seydişehir’de bugün nöbetçi olan eczaneler, telefon ve harita konumuyla.', tint: 'bg-red-50 text-red-600' },
+  { icon: <Bus />, title: 'Otobüs Saatleri', desc: 'Seydişehir otobüs güzergahlarının sefer saatleri ve sıradaki otobüs.', tint: 'bg-teal-50 text-teal-600' },
+  { icon: <Store />, title: 'Halk Pazarları', desc: 'Seydişehir halk pazarları hangi gün, nerede kuruluyor.', tint: 'bg-amber-50 text-amber-600' },
+  { icon: <Gavel />, title: 'Noterler', desc: 'Seydişehir noterlerinin adres ve telefon bilgileri.', tint: 'bg-slate-100 text-slate-700' },
+  { icon: <HeartHandshake />, title: 'Vefat İlanları', desc: 'Seydişehir Belediyesi vefat ilanları, isterseniz bildirimle.', tint: 'bg-slate-100 text-slate-600' },
   { icon: <Map />, title: 'Seydi Harita', desc: 'Firmalar, gezilecek yerler ve etkinlikler tek haritada.', tint: 'bg-emerald-50 text-emerald-600' },
   { icon: <Newspaper />, title: 'Yerel Haberler', desc: 'Seydişehir haberleri tek akışta.', tint: 'bg-green-50 text-green-700' },
   { icon: <MessagesSquare />, title: 'Forum', desc: 'Soru sorun, öneri paylaşın, şehirle konuşun.', tint: 'bg-violet-50 text-violet-600' },
@@ -63,6 +64,66 @@ const FAQS = [
   {
     q: 'Kişisel verilerim nasıl kullanılıyor?',
     a: 'Verilerin nasıl işlendiğini Gizlilik ve KVKK metinlerimizde açıkça anlattık. Hesabınızı istediğiniz an uygulama içinden silebilirsiniz.',
+  },
+];
+
+// --- SEO ---------------------------------------------------------------------------------
+const PAGE_TITLE = 'Seydi Rehber — Seydişehir Nöbetçi Eczane, Otobüs Saatleri, Pazarlar ve Haberler';
+const PAGE_DESCRIPTION =
+  'Seydişehir’in şehir rehberi uygulaması: bugün nöbetçi eczane, otobüs saatleri, halk pazarı günleri, vefat ilanları, yerel haberler, iş ilanları ve esnaf kuponları. iOS ve Android’de ücretsiz.';
+
+const SEYDISEHIR = {
+  '@type': 'City',
+  name: 'Seydişehir',
+  geo: { '@type': 'GeoCoordinates', latitude: 37.418, longitude: 31.846 },
+  containedInPlace: { '@type': 'AdministrativeArea', name: 'Konya', containedInPlace: { '@type': 'Country', name: 'Türkiye' } },
+};
+
+const STRUCTURED_DATA: object[] = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    '@id': `${SITE_URL}/#organization`,
+    name: 'Seydi Rehber',
+    url: `${SITE_URL}/`,
+    logo: `${SITE_URL}/logo.png`,
+    email: CONTACT_EMAIL,
+    areaServed: SEYDISEHIR,
+    sameAs: [APP_STORE_URL, PLAY_URL],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
+    name: 'Seydi Rehber',
+    alternateName: ['Seydişehir Rehberi', 'SeydiRehber'],
+    url: `${SITE_URL}/`,
+    inLanguage: 'tr-TR',
+    publisher: { '@id': `${SITE_URL}/#organization` },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'MobileApplication',
+    name: 'Seydi Rehber',
+    description: PAGE_DESCRIPTION,
+    operatingSystem: 'iOS, Android',
+    applicationCategory: 'TravelApplication',
+    inLanguage: 'tr',
+    image: OG_IMAGE,
+    screenshot: [`${SITE_URL}/screens/home-services.jpg`, `${SITE_URL}/screens/home-places.jpg`],
+    installUrl: [APP_STORE_URL, PLAY_URL],
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'TRY' },
+    areaServed: SEYDISEHIR,
+    publisher: { '@id': `${SITE_URL}/#organization` },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: FAQS.map((faq) => ({
+      '@type': 'Question',
+      name: faq.q,
+      acceptedAnswer: { '@type': 'Answer', text: faq.a },
+    })),
   },
 ];
 
@@ -139,16 +200,8 @@ const LandingPage = () => {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 antialiased overflow-x-hidden" style={{ fontFamily: "'Poppins', system-ui, sans-serif" }}>
+      <Seo title={PAGE_TITLE} description={PAGE_DESCRIPTION} path="/" jsonLd={STRUCTURED_DATA} />
       <Helmet>
-        <html lang="tr" />
-        <title>Seydi Rehber — Seydişehir’in şehir rehberi uygulaması</title>
-        <meta
-          name="description"
-          content="Nöbetçi eczane, otobüs saatleri, halk pazarları, vefat ilanları, yerel haberler, iş ilanları ve esnaf fırsatları. Seydişehir için ücretsiz şehir rehberi uygulaması."
-        />
-        <meta property="og:title" content="Seydi Rehber — Seydişehir cebinizde" />
-        <meta property="og:description" content="Seydişehir’in günlük ihtiyaçları tek uygulamada. iOS ve Android’de ücretsiz." />
-        <meta property="og:image" content="/screens/home-services.jpg" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />

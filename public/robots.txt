@@ -1,4 +1,6 @@
 User-agent: *
 Allow: /
+# Yönetim paneli taranmaz. /esnaf taranabilir ki sayfadaki "noindex" görülsün (ana sayfadan bağlantı var).
+Disallow: /admin
 
-Sitemap: https://seydirehber.com.tr/sitemap.xml
+Sitemap: https://www.seydirehber.com.tr/sitemap.xml

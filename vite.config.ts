@@ -8,18 +8,15 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    // Kanonik adres www'li (seydirehber.com.tr → www'ye yönleniyor). "/" index.html'den otomatik gelir;
+    // # bağlantıları ayrı sayfa değildir, eklenmez. robots.txt public/'ten elle yönetilir.
     Sitemap({
-      hostname: 'https://seydirehber.com.tr',
-      dynamicRoutes: [
-        '/',
-        '/#features',
-        '/#faq',
-        '/#download',
-        '/about',
-        '/privacy',
-        '/kvkk',
-        '/politikalar'
-      ]
+      hostname: 'https://www.seydirehber.com.tr',
+      dynamicRoutes: ['/about', '/politikalar', '/privacy', '/kvkk'],
+      exclude: ['/admin', '/esnaf'],
+      changefreq: { '/': 'weekly', '*': 'monthly' },
+      priority: { '/': 1.0, '*': 0.5 },
+      generateRobotsTxt: false,
     }),
   ],
   build: {
